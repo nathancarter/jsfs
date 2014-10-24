@@ -1,12 +1,25 @@
 
-# The build process
+# One build task to rule them all
+
+The following build task builds everything, which at this point
+includes just the jsfs library and the test specs.  See below for
+what each of those individual tasks means.
+
+    taskQueue = []
+    next = -> if taskQueue.length then invoke taskQueue.shift()
+    task 'all', 'All the tasks listed below', ->
+        taskQueue.push 'build'
+        taskQueue.push 'test'
+        next()
+
+# The main build process
 
 A Cakefile should define the tasks it can perform.  This one can
 perform just one task, "build."  This compiles all the sources
 (in literate coffeescript) into JavaScript, and minifies it, with
 source maps, ready for production use.
 
-    task 'build', 'Compile .litcoffee sources into .js files', ->
+    task 'build', 'Compile jsfs.litcoffee into release/', ->
 
 ## Ensure requirements present
 
@@ -39,7 +52,7 @@ The first step is to call the CoffeeScript compiler.
         exec 'coffee --map --compile jsfs.litcoffee',
         { cwd : '.' }, ( err, stdout, stderr ) ->
             if stdout + stderr
-                console.log ( stdout + stderr ).red
+                console.log stdout + stderr.red
             throw err if err
 
 The next step is to call UglifyJS.
@@ -50,7 +63,7 @@ The next step is to call UglifyJS.
                 -o jsfs.min.js --source-map jsfs.min.js.map',
             { cwd : '.' }, ( err, stdout, stderr ) ->
                 if stdout + stderr
-                    console.log ( stdout + stderr ).red
+                    console.log stdout + stderr.red
                 throw err if err
 
 Move the compiled files into the release folder.
@@ -60,12 +73,13 @@ Move the compiled files into the release folder.
                     jsfs.min.js.map release/',
                 { cwd : '.' }, ( err, stdout, stderr ) ->
                     if stdout + stderr
-                        console.log ( stdout + stderr ).red
+                        console.log stdout + stderr.red
                     throw err if err
 
 That's the job!
 
-                    console.log 'Done!'.green
+                    console.log 'Done building jsfs.js.'.green
+                    next()
 
 # Testing
 
@@ -73,7 +87,7 @@ The following task compiles the test specs from literate
 CoffeeScript files into JavaScript files, so that the unit testing
 page (in `tests/index.html`) is up-to-date.
 
-    task 'test', 'Compile .litcoffee test specs into .js files', ->
+    task 'test', 'Compile tests/*.litcoffee test specs', ->
         colors = require 'colors'
         { exec } = require 'child_process'
         fs = require 'fs'
@@ -84,15 +98,16 @@ the CoffeeScript compiler on each.
 
         toBuild = ( file for file in fs.readdirSync 'tests' when \
             file[-10..] is '.litcoffee' )
+        count = 0
         for file in toBuild
             console.log "Compiling tests/#{file}...".green
             exec "coffee --compile #{file}", { cwd : 'tests' },
             ( err, stdout, stderr ) ->
                 if stdout + stderr
-                    console.log ( stdout + stderr ).red
+                    console.log stdout + stderr.red
                 throw err if err
                 file = file[..-11] + '.js'
-                console.log "Built tests/#{file}.".green
+                console.log "Done building tests/#{file}.".green
 
 Also check to see if the file we just compiled is mentioned in the
 unit testing HTML file.  If not, issue a warning that there is a
@@ -101,4 +116,9 @@ compiled test spec that's unused.
                 if -1 is html.indexOf file
                     console.log "Warning: Compiled file #{file}
                         is not mentioned in tests/index.html!".red
+                if ++count is toBuild.length
+                    console.log 'All test specs built.  Open
+                        tests/index.html to run them and see the
+                        results.'
+                    next()
 

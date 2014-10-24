@@ -1,10 +1,6 @@
 
 # To-do list for this project
 
-## Setting up a build process
-
- * Add a simple test to be sure it's working.
-
 ## Main work
 
 For each step below, after implementing it, add a test as well.
