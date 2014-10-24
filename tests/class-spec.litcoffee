@@ -2,7 +2,7 @@
 These tests are about the `FileSystem` class itself, as opposed to
 instances thereof.
 
-    describe 'FileSystem class', ->
+    describe 'The FileSystem class', ->
 
 Ensure the global variable `FileSystem` is defined.
 

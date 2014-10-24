@@ -5,12 +5,45 @@
 
     _Class.prototype.escapeCharacter = '\\';
 
+    _Class.prototype._cache = {};
+
+    _Class.prototype._storageName = function() {
+      return "" + this._name + "_filesystem";
+    };
+
+    _Class.prototype._getFilesystemObject = function() {
+      var fs;
+      if (FileSystem.prototype._cache.hasOwnProperty(this._name)) {
+        return FileSystem.prototype._cache[this._name];
+      }
+      fs = localStorage.getItem(this._storageName());
+      if (fs === null) {
+        localStorage.setItem(this._name, JSON.stringify(fs = {}));
+      }
+      return FileSystem.prototype._cache[this._name] = fs;
+    };
+
     function _Class(name) {
       this._name = ("" + name) || 'undefined';
+      this._getFilesystemObject();
     }
 
     _Class.prototype.getName = function() {
       return this._name;
+    };
+
+    _Class.prototype._changeFileSystem = function(changeFunction) {
+      var backup, e, fs;
+      fs = this._getFilesystemObject();
+      backup = JSON.stringify(fs);
+      try {
+        changeFunction(fs);
+        return localStorage.setItem(this._storageName(), JSON.stringify(fs));
+      } catch (_error) {
+        e = _error;
+        this._cache[this._name] = JSON.parse(backup);
+        throw e;
+      }
     };
 
     return _Class;
