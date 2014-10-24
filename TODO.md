@@ -4,8 +4,8 @@
 ## Main work
 
 For each step below, after implementing it, add a test as well.
- * Create a `FileSystem` class.  In the bullet points below, `fs`
-   refers to an example instance of the class.
+In the bullet points below, `fs` refers to an example instance of
+the class.
  * Put a path separator constant as a class member.  Use `/`.
  * Create an instance by passing the name of the filesystem.
    This permits one `localStorage` to contain many filesystems,
