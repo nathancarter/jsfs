@@ -53,9 +53,19 @@ The next step is to call UglifyJS.
                     console.log ( stdout + stderr ).red
                 throw err if err
 
+Move the compiled files into the release folder.
+
+                console.log 'Moving files to release/...'.green
+                exec 'mv jsfs.js jsfs.map jsfs.min.js
+                    jsfs.min.js.map release/',
+                { cwd : '.' }, ( err, stdout, stderr ) ->
+                    if stdout + stderr
+                        console.log ( stdout + stderr ).red
+                    throw err if err
+
 That's the job!
 
-                console.log 'Done!'.green
+                    console.log 'Done!'.green
 
 # Cleaning up
 
@@ -66,7 +76,7 @@ would ordinarily produce.
         colors = require 'colors'
         { exec } = require 'child_process'
         exec 'rm jsfs.js jsfs.map jsfs.min.js jsfs.min.js.map',
-        { cwd : '.' }, ( err, stdout, stderr ) ->
+        { cwd : 'release' }, ( err, stdout, stderr ) ->
             if stdout + stderr
                 console.log ( stdout + stderr ).red
             throw err if err
