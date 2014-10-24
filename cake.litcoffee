@@ -67,3 +67,38 @@ That's the job!
 
                     console.log 'Done!'.green
 
+# Testing
+
+The following task compiles the test specs from literate
+CoffeeScript files into JavaScript files, so that the unit testing
+page (in `tests/index.html`) is up-to-date.
+
+    task 'test', 'Compile .litcoffee test specs into .js files', ->
+        colors = require 'colors'
+        { exec } = require 'child_process'
+        fs = require 'fs'
+        html = ( fs.readFileSync 'tests/index.html' ).toString()
+
+First find the list of files to build, and iterate over it, running
+the CoffeeScript compiler on each.
+
+        toBuild = ( file for file in fs.readdirSync 'tests' when \
+            file[-10..] is '.litcoffee' )
+        for file in toBuild
+            console.log "Compiling tests/#{file}...".green
+            exec "coffee --compile #{file}", { cwd : 'tests' },
+            ( err, stdout, stderr ) ->
+                if stdout + stderr
+                    console.log ( stdout + stderr ).red
+                throw err if err
+                file = file[..-11] + '.js'
+                console.log "Built tests/#{file}.".green
+
+Also check to see if the file we just compiled is mentioned in the
+unit testing HTML file.  If not, issue a warning that there is a
+compiled test spec that's unused.
+
+                if -1 is html.indexOf file
+                    console.log "Warning: Compiled file #{file}
+                        is not mentioned in tests/index.html!".red
+
