@@ -5,7 +5,8 @@
   "author": "Nathan Carter <ncarter@bentley.edu> (http://web.bentley.edu/empl/c/ncarter)",
   "license": "LGPLv3",
   "dependencies": {
-    "coffee-script" : "1.7.1",
-    "uglify-js" : "2.4.12"
+    "coffee-script" : "1.8.0",
+    "uglify-js" : "2.4.15",
+    "colors" : "1.0.3"
   }
 }

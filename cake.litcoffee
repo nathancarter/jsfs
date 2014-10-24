@@ -33,8 +33,9 @@ JavaScript and minify it (with source maps).  We do so now.
 
 The first step is to call the CoffeeScript compiler.
 
+        colors = require 'colors'
         { exec } = require 'child_process'
-        console.log 'Compiling jsfs.litcoffee...'
+        console.log 'Compiling jsfs.litcoffee...'.green
         exec 'coffee --map --compile jsfs.litcoffee',
         { cwd : '.' }, ( err, stdout, stderr ) ->
             console.log stdout + stderr if stdout + stderr
@@ -42,7 +43,7 @@ The first step is to call the CoffeeScript compiler.
 
 The next step is to call UglifyJS.
 
-            console.log 'Minifying jsfs.js...'
+            console.log 'Minifying jsfs.js...'.green
             exec './node_modules/uglify-js/bin/uglifyjs
                 -c -m -v false --in-source-map jsfs.map
                 -o jsfs.min.js --source-map jsfs.min.js.map',
@@ -52,5 +53,5 @@ The next step is to call UglifyJS.
 
 That's the job!
 
-                console.log 'Done!'
+                console.log 'Done!'.green
 
