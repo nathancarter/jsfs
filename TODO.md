@@ -3,9 +3,6 @@
 
 ## Setting up a build process
 
- * Import [Jasmine](http://jasmine.github.io/).
- * Create a test page that imports and uses Jasmine and the
-   compiled and minified code.
  * Add a simple test to be sure it's working.
 
 ## Main work
