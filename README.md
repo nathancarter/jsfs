@@ -1,7 +1,10 @@
 
 # jsfs
 
-Tiny JavaScript filesystem stored in LocalStorage
+### Tiny JavaScript filesystem stored in LocalStorage
 
-Nothing here yet except the to-do list in [TODO.md](TODO.md).
+This project only just began very recently, and thus almost
+nothing has been built yet.
+
+But you can see [the to-do list](TODO.md).
 
