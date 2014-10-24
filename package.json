@@ -1,0 +1,11 @@
+{
+  "name": "jsfs",
+  "version": "0.0.0",
+  "description": "Tiny JavaScript filesystem stored in LocalStorage",
+  "author": "Nathan Carter <ncarter@bentley.edu> (http://web.bentley.edu/empl/c/ncarter)",
+  "license": "LGPLv3",
+  "dependencies": {
+    "coffee-script" : "1.7.1",
+    "uglify-js" : "2.4.12"
+  }
+}

@@ -3,9 +3,6 @@
 
 ## Setting up a build process
 
- * Import [coffeescript](http://coffeescript.org) with npm.
- * Import [uglify-js](https://github.com/mishoo/UglifyJS) with
-   npm.
  * Create a Cakefile that compiles and minifies the source file,
    also creating source map files at the same time.
  * Import [Jasmine](http://jasmine.github.io/).
