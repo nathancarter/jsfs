@@ -3,8 +3,6 @@
 
 ## Setting up a build process
 
- * Create a Cakefile that compiles and minifies the source file,
-   also creating source map files at the same time.
  * Import [Jasmine](http://jasmine.github.io/).
  * Create a test page that imports and uses Jasmine and the
    compiled and minified code.
