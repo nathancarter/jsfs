@@ -3,8 +3,6 @@
 
 ## Setting up a build process
 
- * Create a stub source file in
-   [literate coffeescript](http://coffeescript.org#literate).
  * Import [coffeescript](http://coffeescript.org) with npm.
  * Import [uglify-js](https://github.com/mishoo/UglifyJS) with
    npm.
