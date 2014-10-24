@@ -67,18 +67,3 @@ That's the job!
 
                     console.log 'Done!'.green
 
-# Cleaning up
-
-Running `cake clean` should remove all the files that a build
-would ordinarily produce.
-
-    task 'clean', 'Delete all .js files and source maps', ->
-        colors = require 'colors'
-        { exec } = require 'child_process'
-        exec 'rm jsfs.js jsfs.map jsfs.min.js jsfs.min.js.map',
-        { cwd : 'release' }, ( err, stdout, stderr ) ->
-            if stdout + stderr
-                console.log ( stdout + stderr ).red
-            throw err if err
-            console.log 'Done!'.green
-
