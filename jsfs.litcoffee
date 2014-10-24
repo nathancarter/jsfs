@@ -58,12 +58,17 @@ object has been loaded into the cache, or created there.
 
             @_getFilesystemObject()
 
-Because the name is read-only, we provide the following getter
-for it.
+The current working directory (cwd hereafter) is initialized to
+the root.
+
+            @_cwd = FileSystem::pathSeparator # i.e., /
+
+For read-only attributes, we provide getters here.
 
         getName : -> @_name
+        getCwd : -> @_cwd
 
-## Making changes
+## Making changes (internal API)
 
 When a change is made to the filesystem (not a file in it, but
 the actual structure of the filesystem, such as moving a file
@@ -89,6 +94,50 @@ thrown error is permitted to propagate up the stack.
             catch e
                 @_cache[@_name] = JSON.parse backup
                 throw e
+
+## Changing directories
+
+There will be several situations in which we need to deal with
+path strings.  The first is here, where we have functions for
+changing the cwd, and they accept a path as argument, and need to
+parse it.  For this reason, we need tools for splitting and
+joining paths at path separators (and thus using escape
+characters to escape path separators in file and folder names).
+Here they are.
+
+        simultaneousReplace = ( string, swaps... ) ->
+            result = ''
+            while string.length > 0
+                found = no
+                for i in [0...swaps.length-1] by 2
+                    if string[...swaps[i].length] is swaps[i]
+                        result += swaps[i+1]
+                        string = string[swaps[i].length..]
+                        found = yes
+                        break
+                if not found
+                    result += string[0]
+                    string = string[1..]
+            result
+        _splitPath : ( pathString ) ->
+            sep = FileSystem::pathSeparator
+            esc = FileSystem::escapeCharacter
+            pos = pathString.indexOf sep+sep
+            while pos > -1
+                pathString = pathString[...pos] +
+                    pathString[pos+sep.length..]
+                pos = pathString.indexOf sep+sep
+            if pathString[...sep.length] is sep
+                pathString = pathString[sep.length..]
+            ( simultaneousReplace pathString, \
+                esc+sep, sep, esc+esc, esc, sep, '\n' ).split '\n'
+        _joinPath : ( pathArray ) ->
+            sep = FileSystem::pathSeparator
+            esc = FileSystem::escapeCharacter
+            ( simultaneousReplace p, sep, esc+sep, esc, esc+esc \
+                for p in pathArray ).join sep
+
+(Cwd functions not yet implemented...to come...)
 
 ## More to come
 
