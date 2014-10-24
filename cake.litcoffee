@@ -100,25 +100,28 @@ the CoffeeScript compiler on each.
             file[-10..] is '.litcoffee' )
         count = 0
         for file in toBuild
-            console.log "Compiling tests/#{file}...".green
-            exec "coffee --compile #{file}", { cwd : 'tests' },
-            ( err, stdout, stderr ) ->
-                if stdout + stderr
-                    console.log stdout + stderr.red
-                throw err if err
-                file = file[..-11] + '.js'
-                console.log "Done building tests/#{file}.".green
+            do ( file ) ->
+                console.log "Compiling tests/#{file}...".green
+                exec "coffee --compile #{file}", { cwd : 'tests' },
+                ( err, stdout, stderr ) ->
+                    if stdout + stderr
+                        console.log stdout + stderr.red
+                    throw err if err
+                    file = file[..-11] + '.js'
+                    console.log "Done building
+                        tests/#{file}.".green
 
 Also check to see if the file we just compiled is mentioned in the
 unit testing HTML file.  If not, issue a warning that there is a
 compiled test spec that's unused.
 
-                if -1 is html.indexOf file
-                    console.log "Warning: Compiled file #{file}
-                        is not mentioned in tests/index.html!".red
-                if ++count is toBuild.length
-                    console.log 'All test specs built.  Open
-                        tests/index.html to run them and see the
-                        results.'
-                    next()
+                    if -1 is html.indexOf file
+                        console.log "Warning: Compiled file
+                            #{file} is not mentioned in
+                            #tests/index.html!".red
+                    if ++count is toBuild.length
+                        console.log 'All test specs built.  Open
+                            tests/index.html to run them and see
+                            the results.'
+                        next()
 
