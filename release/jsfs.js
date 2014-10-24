@@ -3,6 +3,10 @@
   window.FileSystem = (function() {
     function _Class() {}
 
+    _Class.prototype.pathSeparator = '/';
+
+    _Class.prototype.escapeCharacter = '\\';
+
     return _Class;
 
   })();

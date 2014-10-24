@@ -6,6 +6,14 @@ instances thereof.
 
 Ensure the global variable `FileSystem` is defined.
 
-        it 'should be defined', ->
+        it 'is defined', ->
             expect( window.FileSystem ).toBeTruthy()
+
+Ensure it has the class members it provides, functioning as a
+namespace.
+
+        it 'provides class members like a namespace does', ->
+            expect( window.FileSystem::pathSeparator ).toBeTruthy()
+            expect( window.FileSystem::escapeCharacter )
+                .toBeTruthy()
 
