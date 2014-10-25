@@ -257,7 +257,7 @@
       try {
         this._changeFilesystem((function(_this) {
           return function(fs) {
-            var data, number, step, _i, _len, _ref;
+            var data, fname, former, number, step, _i, _len, _ref;
             _ref = fullpath.slice(0, -1);
             for (_i = 0, _len = _ref.length; _i < _len; _i++) {
               step = _ref[_i];
@@ -275,8 +275,11 @@
               number = _this._nextAvailableFileNumber();
             }
             data = JSON.stringify(content);
-            localStorage.setItem(_this._fileName(number), data);
+            fname = _this._fileName(number);
+            former = localStorage.getItem(fname);
+            localStorage.setItem(fname, data);
             wrote = {
+              past: former,
               name: _this._fileName(number),
               size: data.length
             };
@@ -287,7 +290,11 @@
       } catch (_error) {
         e = _error;
         if (wrote) {
-          localStorage.removeItem(wrote.name);
+          if (wrote.past) {
+            localStorage.setItem(wrote.name, wrote.past);
+          } else {
+            localStorage.removeItem(wrote.name);
+          }
         }
         throw e;
       }

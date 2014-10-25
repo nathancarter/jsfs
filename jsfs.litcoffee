@@ -291,10 +291,18 @@ can be any JavaScript object to which `JSON.stringify` can be
 applied.
 
         write : ( filename, content ) ->
+
+First split the path into steps and lift the last one off as the
+filename.
+
             fullpath = FileSystem::_splitPath \
                 FileSystem::_toCanonicalPath \
                 FileSystem::_toAbsolutePath @_cwd, filename
             name = fullpath[fullpath.length-1]
+
+All write operations must happen inside an attempt to change the
+filesystem, so that they are reverted if an error is thrown.
+
             wrote = no
             try
                 @_changeFilesystem ( fs ) =>
@@ -310,15 +318,27 @@ applied.
                     else
                         number = @_nextAvailableFileNumber()
                     data = JSON.stringify content
-                    localStorage.setItem @_fileName( number ),
-                        data
+                    fname = @_fileName number
+                    former = localStorage.getItem fname
+                    localStorage.setItem fname, data
                     wrote =
+                        past : former
                         name : @_fileName number
                         size : data.length
                     fs[name] = [ number, data.length ]
                 wrote.size
+
+Any errors will revert the change to the filesystem, but not to
+any individual files.  Hence we store that information in the
+`wrote` variable, above, so that we can use it to undo things here
+if anything went wrong:
+
             catch e
-                if wrote then localStorage.removeItem wrote.name
+                if wrote
+                    if wrote.past
+                        localStorage.setItem wrote.name, wrote.past
+                    else
+                        localStorage.removeItem wrote.name
                 throw e
 
 Second, the corresponding function to read the data from a file
@@ -327,10 +347,17 @@ in the file is the result of an application of `JSON.stringify`,
 and thus `JSON.parse` is applied to it and the result returned.
 
         read : ( filename ) ->
+
+First split the path into steps and lift the last one off as the
+filename.
+
             fullpath = FileSystem::_splitPath \
                 FileSystem::_toCanonicalPath \
                 FileSystem::_toAbsolutePath @_cwd, filename
             name = fullpath[fullpath.length-1]
+
+Now find the folder containing the file.
+
             fs = @_getFilesystemObject()
             for step in fullpath[...-1]
                 if not fs.hasOwnProperty step or
@@ -340,6 +367,10 @@ and thus `JSON.parse` is applied to it and the result returned.
             if not fs.hasOwnProperty name or
                fs[name] not instanceof Array
                 throw Error 'No such file in that folder'
+
+We've gotten past all the possible errors, so read the file's
+content, decode it, and return it.
+
             JSON.parse localStorage.getItem @_fileName fs[name][0]
 
 ## More to come
