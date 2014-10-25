@@ -12,10 +12,6 @@ and whose values are either another object (for folders) or a
 two-element array (for files), of the form `[index,sizeInBytes]`.
 For any given index $n$, the entry `localStorage.NAME_file_`$n$
 will contain the file's contents, serialized and compressed.
- * `fs.mkdir name` adds a new path (or paths) to the filesystem.
-   The name can be an absolute or relative path, and this creates
-   all necessary folders en route to the innermost one.  Returns
-   true on success, or false if the folder already existed.
  * `fs.rm filename` removes the given file or folder, returning
    true on success, or false if the path was invalid.  In the
    case of a folder, the removal is recursive.  All files are

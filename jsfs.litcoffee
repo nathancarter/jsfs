@@ -84,7 +84,7 @@ change, the current state of the filesystem is serialized for
 backup.  If the change fails, the backup is restored before the
 thrown error is permitted to propagate up the stack.
 
-        _changeFileSystem : ( changeFunction ) ->
+        _changeFilesystem : ( changeFunction ) ->
             fs = @_getFilesystemObject()
             backup = JSON.stringify fs
             try
@@ -237,7 +237,26 @@ In either case, the path is then made canonical.
             @_cwd = newcwd if @_isValidCanonicalPath newcwd
 
 The following member function creates a new directory.  It takes
-as input an absolute or relative path
+as input an absolute or relative path and creates all necessary
+folders en route to the one named.  It returns true on success or
+false on failure.  It only fails if there was not enough space to
+store the new filesystem, or if the folder already exists.
+
+        mkdir : ( path = '.' ) ->
+            newpath = FileSystem::_splitPath \
+                FileSystem::_toCanonicalPath \
+                FileSystem::_toAbsolutePath @_cwd, path
+            try
+                hadToAdd = no
+                @_changeFilesystem ( fs ) ->
+                    for step in newpath
+                        if not fs.hasOwnProperty step
+                            fs[step] = { }
+                            hadToAdd = yes
+                        fs = fs[step]
+                hadToAdd
+            catch e
+                no
 
 ## More to come
 

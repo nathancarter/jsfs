@@ -86,9 +86,9 @@ test.
 We first test that the private member for writing to LocalStorage
 works in simple cases where nothing goes wrong.
 
-        it 'supports writing with _changeFileSystem', ->
+        it 'supports writing with _changeFilesystem', ->
             F = new window.FileSystem 'example'
-            F._changeFileSystem ( fs ) -> fs.newFolder = { }
+            F._changeFilesystem ( fs ) -> fs.newFolder = { }
             result = JSON.parse \
                 localStorage.getItem F._storageName()
             expect( result ).toEqual newFolder : { }
@@ -103,7 +103,7 @@ First, create a `FileSystem` object and run a null change to
 induce a save to LocalStorage.
 
             F = new window.FileSystem 'example'
-            F._changeFileSystem ( fs ) ->
+            F._changeFilesystem ( fs ) ->
 
 Now a simple test to verify the baseline.  We check both the
 in-memory version of the filesystem and the in-storage version.
@@ -118,7 +118,7 @@ an error.
 
             error = null
             try
-                F._changeFileSystem ( fs ) ->
+                F._changeFilesystem ( fs ) ->
                     fs.change = { }
                     throw new Error 'Oops!'
             catch e
@@ -145,7 +145,7 @@ valid vs. invalid canonical paths.
 
         it 'can change the cwd correctly', ->
             F = new window.FileSystem 'example'
-            F._changeFileSystem ( fs ) ->
+            F._changeFilesystem ( fs ) ->
                 fs.folder1 = inner1a : { }, inner1b : { }
                 fs.folder2 = inner2a : { }
 
@@ -202,4 +202,34 @@ change, because the attempted `cd` call was to an invalid folder.
             expect( F._cwd ).toBe '/folder1'
             F.cd 'foo/bar/..'
             expect( F._cwd ).toBe '/folder1'
+
+## Creating new folders
+
+        it 'can use mkdir to make new folders', ->
+            F = new window.FileSystem 'example'
+
+First be sure that /foo does not exist.  Then create it and cd
+into it, and verify that we have entered it.  Also verify that
+the `mkdir` call returns true.
+
+            F.cd 'foo'
+            expect( F._cwd ).toBe '/'
+            expect( F.mkdir 'foo' ).toBeTruthy()
+            F.cd 'foo'
+            expect( F._cwd ).toBe '/foo'
+
+Now repeat the same test, but this time for a more deeply nested
+path, and test that we can cd into each part of it.
+
+            expect( F.mkdir '/bar/baz' ).toBeTruthy()
+            F.cd '/bar'
+            expect( F._cwd ).toBe '/bar'
+            F.cd 'baz'
+            expect( F._cwd ).toBe '/bar/baz'
+
+Now verify that `mkdir` returns false if the directory already
+exists.
+
+            expect( F.mkdir '/foo' ).toBeFalsy()
+            expect( F.mkdir '/bar' ).toBeFalsy()
 

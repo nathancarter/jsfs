@@ -41,7 +41,7 @@
       return this._cwd;
     };
 
-    _Class.prototype._changeFileSystem = function(changeFunction) {
+    _Class.prototype._changeFilesystem = function(changeFunction) {
       var backup, e, fs;
       fs = this._getFilesystemObject();
       backup = JSON.stringify(fs);
@@ -178,6 +178,34 @@
       newcwd = FileSystem.prototype._toCanonicalPath(FileSystem.prototype._toAbsolutePath(this._cwd, path));
       if (this._isValidCanonicalPath(newcwd)) {
         return this._cwd = newcwd;
+      }
+    };
+
+    _Class.prototype.mkdir = function(path) {
+      var e, hadToAdd, newpath;
+      if (path == null) {
+        path = '.';
+      }
+      newpath = FileSystem.prototype._splitPath(FileSystem.prototype._toCanonicalPath(FileSystem.prototype._toAbsolutePath(this._cwd, path)));
+      try {
+        hadToAdd = false;
+        this._changeFilesystem(function(fs) {
+          var step, _i, _len, _results;
+          _results = [];
+          for (_i = 0, _len = newpath.length; _i < _len; _i++) {
+            step = newpath[_i];
+            if (!fs.hasOwnProperty(step)) {
+              fs[step] = {};
+              hadToAdd = true;
+            }
+            _results.push(fs = fs[step]);
+          }
+          return _results;
+        });
+        return hadToAdd;
+      } catch (_error) {
+        e = _error;
+        return false;
       }
     };
 
