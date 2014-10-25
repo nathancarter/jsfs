@@ -186,6 +186,10 @@ Try a few nested paths, but all still valid.
             expect( F._cwd ).toBe '/folder2/inner2a'
             F.cd '../../folder1'
             expect( F._cwd ).toBe '/folder1'
+            F.cd '/folder2'
+            expect( F._cwd ).toBe '/folder2'
+            F.cd '/folder1/nothing/..'
+            expect( F._cwd ).toBe '/folder1'
 
 Now try some invalid paths.  In each case, the cwd should not
 change, because the attempted `cd` call was to an invalid folder.

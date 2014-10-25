@@ -120,8 +120,11 @@
 
     _Class.prototype._toAbsolutePath = function(cwdPath, relativePath) {
       var result, sep;
-      result = FileSystem.prototype._joinPath((FileSystem.prototype._splitPath(cwdPath)).concat(FileSystem.prototype._splitPath(relativePath)));
       sep = FileSystem.prototype.pathSeparator;
+      if (relativePath.slice(0, sep.length) === sep) {
+        return relativePath;
+      }
+      result = FileSystem.prototype._joinPath((FileSystem.prototype._splitPath(cwdPath)).concat(FileSystem.prototype._splitPath(relativePath)));
       if (result.slice(0, sep.length) !== sep) {
         result = sep + result;
       }
@@ -168,17 +171,11 @@
     };
 
     _Class.prototype.cd = function(path) {
-      var newcwd, sep;
+      var newcwd;
       if (path == null) {
         path = FileSystem.prototype.pathSeparator;
       }
-      sep = FileSystem.prototype.pathSeparator;
-      if (path.slice(0, +sep.length + 1 || 9e9) === sep) {
-        newcwd = path;
-      } else {
-        newcwd = FileSystem.prototype._toAbsolutePath(this._cwd, path);
-      }
-      newcwd = FileSystem.prototype._toCanonicalPath(newcwd);
+      newcwd = FileSystem.prototype._toCanonicalPath(FileSystem.prototype._toAbsolutePath(this._cwd, path));
       if (this._isValidCanonicalPath(newcwd)) {
         return this._cwd = newcwd;
       }

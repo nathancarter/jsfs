@@ -172,11 +172,16 @@ result is always an absolute path.  No attempt is made to verify
 whether the path is valid in any filesystem, nor is any attempt
 made to canonicalize the path (i.e., apply `.` or `..` entries).
 
+If this function is given an absolute path as its second argument,
+it returns it unchanged.
+
         _toAbsolutePath : ( cwdPath, relativePath ) ->
-            result =FileSystem::_joinPath \
+            sep = FileSystem::pathSeparator
+            if relativePath[...sep.length] is sep
+                return relativePath
+            result = FileSystem::_joinPath \
                 ( FileSystem::_splitPath cwdPath ) \
                     .concat FileSystem::_splitPath relativePath
-            sep = FileSystem::pathSeparator
             if result[...sep.length] isnt sep
                 result = sep + result
             result
@@ -227,13 +232,12 @@ ones, if needed, or just copies the absolute path over if not.
 In either case, the path is then made canonical.
 
         cd : ( path = FileSystem::pathSeparator ) ->
-            sep = FileSystem::pathSeparator
-            if path[..sep.length] is sep
-                newcwd = path
-            else
-                newcwd = FileSystem::_toAbsolutePath @_cwd, path
-            newcwd = FileSystem::_toCanonicalPath newcwd
+            newcwd = FileSystem::_toCanonicalPath \
+                FileSystem::_toAbsolutePath @_cwd, path
             @_cwd = newcwd if @_isValidCanonicalPath newcwd
+
+The following member function creates a new directory.  It takes
+as input an absolute or relative path
 
 ## More to come
 
