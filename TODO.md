@@ -12,19 +12,13 @@ and whose values are either another object (for folders) or a
 two-element array (for files), of the form `[index,sizeInBytes]`.
 For any given index $n$, the entry `localStorage.NAME_file_`$n$
 will contain the file's contents, serialized and compressed.
- * `fs.write filename, content` overwrites the file (or creates a
-   new one) storing the given content, which should be passed
-   through `JSON.stringify` first.  Returns compressed data size
-   on success, or throws an error on failure (e.g., invalid path,
-   or storage full, or filename is that of a folder).
+ * `fs.type filename` yields the string 'file' if the path given
+   in `filename` points to a file, 'folder' if it points to a
+   folder, or null if no entry exists at the given location.
  * `fs.append filename, content` functions just as the previous,
    but concatenates strings, and thus requires that both the
    file's already existing content (if any) be a single string,
    and the new `content` must also be a string.
- * `fs.read filename` yields the content of the file, as read
-   from `localStorage`.  Run it through `JSON.parse`, so that
-   arbitrary objects can be stored in files.  If there is no such
-   file, null is returned.
  * `fs.size filename` yields the size in bytes of the file, if it
    exists, or -1 if it does not.  The filename can be an absolute
    or relative path.

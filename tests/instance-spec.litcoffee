@@ -233,3 +233,50 @@ exists.
             expect( F.mkdir '/foo' ).toBeFalsy()
             expect( F.mkdir '/bar' ).toBeFalsy()
 
+## Reading and writing files
+
+        it 'can read and write files to and from storage', ->
+            F = new window.FileSystem 'example'
+
+Write some text to a file and ensure it can be re-read.
+
+            fname = 'bar.txt'
+            content = 'just a string'
+            expect( F.write fname, content ).toBeTruthy()
+            expect( F.read fname ).toBe content
+
+Ensure that trying to read the same file in a subfolder fails,
+and that trying to read a file in a nonexistant folder fails.
+
+            F.mkdir 'foo'
+            F.cd 'foo'
+            expect( -> F.read fname ).toThrowError \
+                'No such file in that folder'
+            expect( -> F.read 'what/ever/dude' ).toThrowError \
+                'Invalid folder path'
+
+Ensure that similar errors occur when attempting to do invalid
+write operations.
+
+            expect( -> F.write '/foo', content ).toThrowError \
+                'Cannot write to a folder'
+            expect( -> F.write 'what/ever/dude', content ) \
+                .toThrowError 'Invalid folder path'
+
+Ensure that we can write to subfolders and get the content from
+them as well, and that we can write arbitrary objects.
+
+            F.cd()
+            expect( F._cwd ).toBe '/'
+            object = {
+                key1 : [ 1, 2, 3]
+                key2 : innerObject : 'string'
+            }
+            fname2 = '/foo/my.obj'
+            expect( F.write fname2, object ).toBeTruthy()
+            expect( F.read fname2 ).toEqual object
+
+And yet this has not messed up the other file.
+
+            expect( F.read fname ).toBe content
+

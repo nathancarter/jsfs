@@ -29,6 +29,7 @@ existing filesystems from LocalStorage when it can, and creates
 and saves new ones otherwise.
 
         _storageName : -> "#{@_name}_filesystem"
+        _fileName : ( number ) -> "#{@_name}_file_#{number}"
         _getFilesystemObject : ->
             if FileSystem::_cache.hasOwnProperty @_name
                 return FileSystem::_cache[@_name]
@@ -95,7 +96,7 @@ thrown error is permitted to propagate up the stack.
                 @_cache[@_name] = JSON.parse backup
                 throw e
 
-## Dealing with directories
+## Dealing with directories (internal API)
 
 There will be several situations in which we need to deal with
 path strings.  For this reason, we need tools for splitting and
@@ -221,10 +222,11 @@ methods.
                 return no if not walk or walk instanceof Array
             yes
 
-## Working with directories
+## Working with directories (public API)
 
 The functions in this section apply the internal API defined in
-the previous section to create the public API clients expect.
+the previous section to create the public API clients expect for
+dealing with folders.  For dealing with files, see further below.
 
 First, the function for changing the cwd.  This simply applies the
 function defined above for converting relative paths to absolute
@@ -257,6 +259,88 @@ store the new filesystem, or if the folder already exists.
                 hadToAdd
             catch e
                 no
+
+## Dealing with files (internal API)
+
+Files are numbered starting at zero, so we need a way to find the
+next available number, at which we can store a new file.  The
+following function accomplishes this.
+
+        _nextAvailableFileNumber : ->
+            usedNumbers = ( fs = @_getFilesystemObject() ) =>
+                result = [ ]
+                for own key, value of fs
+                    if value instanceof Array
+                        result.push value[0]
+                    else
+                        result.concat usedNumbers value
+                result
+            used = usedNumbers().sort ( a, b ) -> a - b
+            if used.length is 0 then return 0
+            for i in [0..used[used.length-1]+1]
+                if i not in used then return i
+
+## Working with files (public API)
+
+The functions in this section apply the internal API defined in
+the previous section to create the public API clients expect for
+dealing with files.  For dealing with folders, see earlier.
+
+First, a function for writing a file to storage.  The file content
+can be any JavaScript object to which `JSON.stringify` can be
+applied.
+
+        write : ( filename, content ) ->
+            fullpath = FileSystem::_splitPath \
+                FileSystem::_toCanonicalPath \
+                FileSystem::_toAbsolutePath @_cwd, filename
+            name = fullpath[fullpath.length-1]
+            wrote = no
+            try
+                @_changeFilesystem ( fs ) =>
+                    for step in fullpath[...-1]
+                        if not fs.hasOwnProperty step or
+                           fs[step] instanceof Array
+                            throw Error 'Invalid folder path'
+                        fs = fs[step]
+                    if fs.hasOwnProperty name
+                        if fs[name] not instanceof Array
+                            throw Error 'Cannot write to a folder'
+                        number = fs[name][0]
+                    else
+                        number = @_nextAvailableFileNumber()
+                    data = JSON.stringify content
+                    localStorage.setItem @_fileName( number ),
+                        data
+                    wrote =
+                        name : @_fileName number
+                        size : data.length
+                    fs[name] = [ number, data.length ]
+                wrote.size
+            catch e
+                if wrote then localStorage.removeItem wrote.name
+                throw e
+
+Second, the corresponding function to read the data from a file
+into which we previously wrote it.  It is assumed that the string
+in the file is the result of an application of `JSON.stringify`,
+and thus `JSON.parse` is applied to it and the result returned.
+
+        read : ( filename ) ->
+            fullpath = FileSystem::_splitPath \
+                FileSystem::_toCanonicalPath \
+                FileSystem::_toAbsolutePath @_cwd, filename
+            name = fullpath[fullpath.length-1]
+            fs = @_getFilesystemObject()
+            for step in fullpath[...-1]
+                if not fs.hasOwnProperty step or
+                   fs[step] instanceof Array
+                    throw Error 'Invalid folder path'
+                fs = fs[step]
+            if not fs.hasOwnProperty name or
+               fs[name] not instanceof Array
+                throw Error 'No such file in that folder'
+            JSON.parse localStorage.getItem @_fileName fs[name][0]
 
 ## More to come
 
