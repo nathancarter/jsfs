@@ -129,15 +129,74 @@ Here they are.
                 pos = pathString.indexOf sep+sep
             if pathString[...sep.length] is sep
                 pathString = pathString[sep.length..]
-            ( simultaneousReplace pathString, \
-                esc+sep, sep, esc+esc, esc, sep, '\n' ).split '\n'
+            if pathString[-sep.length..] is sep
+                pathString = pathString[...-sep.length]
+            ( bit for bit in ( simultaneousReplace pathString, \
+                esc+sep, sep, esc+esc, esc, sep, '\n' ) \
+                .split '\n' when bit isnt '' )
         _joinPath : ( pathArray ) ->
             sep = FileSystem::pathSeparator
             esc = FileSystem::escapeCharacter
             ( simultaneousReplace p, sep, esc+sep, esc, esc+esc \
                 for p in pathArray ).join sep
 
-(Cwd functions not yet implemented...to come...)
+This function turns relative paths into absolute paths, if given
+a starting (current) directory from which to begin walking.
+
+        _toAbsolutePath : ( cwdPath, relativePath ) ->
+            result =FileSystem::_joinPath \
+                ( FileSystem::_splitPath cwdPath ) \
+                    .concat FileSystem::_splitPath relativePath
+            sep = FileSystem::pathSeparator
+            if result[...sep.length] isnt sep
+                result = sep + result
+            result
+
+This function turns absolute, non-canonical paths (those that may
+contain `.` and `..` entries) into absolute, canonical paths
+(those without such entries).  Note that the input must be an
+absolute path to begin with.
+
+        _toCanonicalPath : ( absolutePath ) ->
+            result = [ ]
+            for step in FileSystem::_splitPath absolutePath
+                if step is '.' then continue
+                if step is '..'
+                    if result.length > 0 then result.pop()
+                else
+                    result.push step
+            result = FileSystem::_joinPath result
+            sep = FileSystem::pathSeparator
+            if result[...sep.length] isnt sep
+                result = sep + result
+            result
+
+Now, a function to test whether a path is valid in this
+filesystem.  A path is valid if it is an absolute, canonical path
+that points to a file or folder that actually exists in the
+filesystem.
+
+        _isValidCanonicalPath : ( absolutePath ) ->
+            path = FileSystem::_splitPath absolutePath
+            walk = @_getFilesystemObject()
+            for step in path
+                walk = walk[step]
+                return no if not walk or walk instanceof Array
+            yes
+
+Now, the function for changing the cwd.  This simply applies the
+function defined above for converting relative paths to absolute
+ones, if needed, or just copies the absolute path over if not.
+In either case, the path is then made canonical.
+
+        cd : ( path = FileSystem::pathSeparator ) ->
+            sep = FileSystem::pathSeparator
+            if path[..sep.length] is sep
+                newcwd = path
+            else
+                newcwd = FileSystem::_toAbsolutePath @_cwd, path
+            newcwd = FileSystem::_toCanonicalPath newcwd
+            @_cwd = newcwd if @_isValidCanonicalPath newcwd
 
 ## More to come
 

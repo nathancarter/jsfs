@@ -46,7 +46,7 @@ We install it as both setup and cleanup for each test run below.
         beforeEach completeClear
         afterEach completeClear
 
-## The tests themselves
+## The constructor
 
 Ensure it accepts a name parameter and retains it internally,
 allowing it to be queried by the `getName` member function.
@@ -80,6 +80,8 @@ test.
                     H._getFilesystemObject() )
             expect( G._getFilesystemObject() ).not.toBe(
                     H._getFilesystemObject() )
+
+## Storage
 
 We first test that the private member for writing to LocalStorage
 works in simple cases where nothing goes wrong.
@@ -135,4 +137,65 @@ LocalStorage.
                 localStorage.getItem F._storageName()
             expect( result ).toEqual { }
             expect( F._getFilesystemObject() ).toEqual { }
+
+## Changing the working directory
+
+Running these tests also indirectly tests the routine that detects
+valid vs. invalid canonical paths.
+
+        it 'can change the cwd correctly', ->
+            F = new window.FileSystem 'example'
+            F._changeFileSystem ( fs ) ->
+                fs.folder1 = inner1a : { }, inner1b : { }
+                fs.folder2 = inner2a : { }
+
+The above lines of code make the following file hierarchy, for
+use in the tests below.
+ * folder1
+   * inner1a
+   * inner1b
+ * folder2
+   * inner2a
+
+
+Try to `cd` to the root folder in two ways.
+
+            F.cd()
+            expect( F._cwd ).toBe '/'
+            F.cd '/'
+            expect( F._cwd ).toBe '/'
+
+Try an absolute path, a non-canonical path, and a relative path.
+
+            F.cd '/folder1'
+            expect( F._cwd ).toBe '/folder1'
+            F.cd '..'
+            expect( F._cwd ).toBe '/'
+            F.cd 'folder1'
+            expect( F._cwd ).toBe '/folder1'
+
+Try a few nested paths, but all still valid.
+
+            F.cd 'inner1a'
+            expect( F._cwd ).toBe '/folder1/inner1a'
+            F.cd '../inner1b'
+            expect( F._cwd ).toBe '/folder1/inner1b'
+            F.cd '../../'
+            expect( F._cwd ).toBe '/'
+            F.cd 'folder2/inner2a'
+            expect( F._cwd ).toBe '/folder2/inner2a'
+            F.cd '../../folder1'
+            expect( F._cwd ).toBe '/folder1'
+
+Now try some invalid paths.  In each case, the cwd should not
+change, because the attempted `cd` call was to an invalid folder.
+
+            F.cd 'foo'
+            expect( F._cwd ).toBe '/folder1'
+            F.cd '../folder3'
+            expect( F._cwd ).toBe '/folder1'
+            F.cd 'folder1'
+            expect( F._cwd ).toBe '/folder1'
+            F.cd 'foo/bar/..'
+            expect( F._cwd ).toBe '/folder1'
 

@@ -1,8 +1,12 @@
 
+# The FileSystem Class
+
 These tests are about the `FileSystem` class itself, as opposed to
 instances thereof.
 
     describe 'The FileSystem class', ->
+
+## Global variables
 
 Ensure the global variable `FileSystem` is defined.
 
@@ -17,6 +21,8 @@ namespace.
             expect( window.FileSystem::escapeCharacter )
                 .toBeTruthy()
 
+## Path splitting and joining
+
 Test the path-splitting routine stored in the `FileSystem` class.
 
         it 'provides a working path-splitting function', ->
@@ -24,6 +30,7 @@ Test the path-splitting routine stored in the `FileSystem` class.
 First, simple splits with no escape characters, first relative,
 then absolute, then with `.` and `..` codes.
 
+            expect( FileSystem::_splitPath '/' ).toEqual [ ]
             expect( FileSystem::_splitPath 'abc/def' ).toEqual \
                 [ 'abc', 'def' ]
             expect( FileSystem::_splitPath '/ab/cd/ef' ).toEqual \
@@ -46,6 +53,7 @@ Second, splits that have some escape characters in them.
 In reverse, we take the exact same examples, and try to path-join
 them, and ensure that they recreate the original inputs.
 
+            expect( FileSystem::_joinPath [ ] ).toEqual ''
             expect( FileSystem::_joinPath [ 'abc', 'def' ] ) \
                 .toEqual 'abc/def'
             expect( FileSystem::_joinPath [ 'ab', 'cd', 'ef' ] ) \
@@ -84,4 +92,28 @@ just become one.
                 [ 'ab', 'ef' ]
             expect( FileSystem::_splitPath '//ab////ef' ).toEqual \
                 [ 'ab', 'ef' ]
+
+## Relative, absolute, and canonical paths
+
+First, we test to see if the conversion of relative to absolute
+paths functions correctly.
+
+        it 'converts relative to absolute paths correctly', ->
+            expect( FileSystem::_toAbsolutePath '/exa/mple',
+                'thing1/thing2' ).toEqual '/exa/mple/thing1/thing2'
+            expect( FileSystem::_toAbsolutePath '',
+                'thing1/thing2' ).toEqual '/thing1/thing2'
+            expect( FileSystem::_toAbsolutePath '/',
+                'a/..//b/' ).toEqual '/a/../b'
+
+Next, we test to see if the conversion of absolute to canonical
+paths functions correctly.
+
+        it 'converts absolute to canonical paths correctly', ->
+            expect( FileSystem::_toCanonicalPath '/a/../b' ) \
+                .toEqual '/b'
+            expect( FileSystem::_toCanonicalPath \
+                '/the/./thing/is/../../X' ).toEqual '/the/X'
+            expect( FileSystem::_toCanonicalPath \
+                '/../../../../' ).toEqual '/'
 

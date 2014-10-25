@@ -78,7 +78,7 @@
     };
 
     _Class.prototype._splitPath = function(pathString) {
-      var esc, pos, sep;
+      var bit, esc, pos, sep, _i, _len, _ref, _results;
       sep = FileSystem.prototype.pathSeparator;
       esc = FileSystem.prototype.escapeCharacter;
       pos = pathString.indexOf(sep + sep);
@@ -89,7 +89,18 @@
       if (pathString.slice(0, sep.length) === sep) {
         pathString = pathString.slice(sep.length);
       }
-      return (simultaneousReplace(pathString, esc + sep, sep, esc + esc, esc, sep, '\n')).split('\n');
+      if (pathString.slice(-sep.length) === sep) {
+        pathString = pathString.slice(0, -sep.length);
+      }
+      _ref = (simultaneousReplace(pathString, esc + sep, sep, esc + esc, esc, sep, '\n')).split('\n');
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        bit = _ref[_i];
+        if (bit !== '') {
+          _results.push(bit);
+        }
+      }
+      return _results;
     };
 
     _Class.prototype._joinPath = function(pathArray) {
@@ -105,6 +116,72 @@
         }
         return _results;
       })()).join(sep);
+    };
+
+    _Class.prototype._toAbsolutePath = function(cwdPath, relativePath) {
+      var result, sep;
+      result = FileSystem.prototype._joinPath((FileSystem.prototype._splitPath(cwdPath)).concat(FileSystem.prototype._splitPath(relativePath)));
+      sep = FileSystem.prototype.pathSeparator;
+      if (result.slice(0, sep.length) !== sep) {
+        result = sep + result;
+      }
+      return result;
+    };
+
+    _Class.prototype._toCanonicalPath = function(absolutePath) {
+      var result, sep, step, _i, _len, _ref;
+      result = [];
+      _ref = FileSystem.prototype._splitPath(absolutePath);
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        step = _ref[_i];
+        if (step === '.') {
+          continue;
+        }
+        if (step === '..') {
+          if (result.length > 0) {
+            result.pop();
+          }
+        } else {
+          result.push(step);
+        }
+      }
+      result = FileSystem.prototype._joinPath(result);
+      sep = FileSystem.prototype.pathSeparator;
+      if (result.slice(0, sep.length) !== sep) {
+        result = sep + result;
+      }
+      return result;
+    };
+
+    _Class.prototype._isValidCanonicalPath = function(absolutePath) {
+      var path, step, walk, _i, _len;
+      path = FileSystem.prototype._splitPath(absolutePath);
+      walk = this._getFilesystemObject();
+      for (_i = 0, _len = path.length; _i < _len; _i++) {
+        step = path[_i];
+        walk = walk[step];
+        if (!walk || walk instanceof Array) {
+          return false;
+        }
+      }
+      return true;
+    };
+
+    _Class.prototype.cd = function(path) {
+      var newcwd, sep;
+      if (path == null) {
+        path = FileSystem.prototype.pathSeparator;
+      }
+      sep = FileSystem.prototype.pathSeparator;
+      if (path.slice(0, +sep.length + 1 || 9e9) === sep) {
+        newcwd = path;
+      } else {
+        newcwd = FileSystem.prototype._toAbsolutePath(this._cwd, path);
+      }
+      newcwd = FileSystem.prototype._toCanonicalPath(newcwd);
+      if (this._isValidCanonicalPath(newcwd)) {
+        return this._cwd = newcwd;
+      }
     };
 
     return _Class;

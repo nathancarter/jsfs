@@ -12,12 +12,6 @@ and whose values are either another object (for folders) or a
 two-element array (for files), of the form `[index,sizeInBytes]`.
 For any given index $n$, the entry `localStorage.NAME_file_`$n$
 will contain the file's contents, serialized and compressed.
- * `fs.cd()` sets the current working directory of `fs` to be the
-   root of the hierarchy, which is its initial state.
- * `fs.cd path` changes the current working directory, and can
-   accept realtive and/or absolute paths, with . and .. in them.
-   It cannot navigate to files, only folders; it returns the
-   folder to which it navigated (same as old cwd on failure).
  * `fs.mkdir name` adds a new path (or paths) to the filesystem.
    The name can be an absolute or relative path, and this creates
    all necessary folders en route to the innermost one.  Returns
