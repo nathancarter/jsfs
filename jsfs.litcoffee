@@ -95,15 +95,22 @@ thrown error is permitted to propagate up the stack.
                 @_cache[@_name] = JSON.parse backup
                 throw e
 
-## Changing directories
+## Dealing with directories
 
 There will be several situations in which we need to deal with
-path strings.  The first is here, where we have functions for
-changing the cwd, and they accept a path as argument, and need to
-parse it.  For this reason, we need tools for splitting and
+path strings.  For this reason, we need tools for splitting and
 joining paths at path separators (and thus using escape
-characters to escape path separators in file and folder names).
-Here they are.
+characters to escape path separators in file and folder names),
+and for converting relative paths to absolute paths, absolute
+paths to canonical paths, and detecting what paths are valid ones.
+Here are all of those tools.
+
+This function is useful in path splitting and joining.
+`simultaneousReplace s, a1, b1, ..., an, bn` returns `s` after
+the application of all the simultaneous replacements "`a1` becomes
+`b1`," through "`an` becomes `bn`."  It is defined with ordinary
+assignment so that it is simply a local variable to this class
+definition, not a class member.
 
         simultaneousReplace = ( string, swaps... ) ->
             result = ''
@@ -119,6 +126,20 @@ Here they are.
                     result += string[0]
                     string = string[1..]
             result
+
+All the remaining functions in this section are members of the
+private API for this class, so they all begin with an underscore.
+
+Take a string such as "/usr/local/bin" and turn it into an array
+such as `[ 'usr', 'local', 'bin' ]`.  This is careful to respect
+the path separator declared earlier, and when it might be escaped
+by the escape character declared earlier as well.
+
+The one quirk of this function is that it yields the same result
+whether or not the path begins with the path separator (i.e., is
+an absolute path).  I.e., "usr/local/bin" gives the same output
+as "/usr/local/bin".
+
         _splitPath : ( pathString ) ->
             sep = FileSystem::pathSeparator
             esc = FileSystem::escapeCharacter
@@ -134,6 +155,11 @@ Here they are.
             ( bit for bit in ( simultaneousReplace pathString, \
                 esc+sep, sep, esc+esc, esc, sep, '\n' ) \
                 .split '\n' when bit isnt '' )
+
+Inverse of the previous function.  This one always outputs a
+relative path.  So, for example, an input of `[ 'usr', 'local' ]`
+yields an output of "usr/local".
+
         _joinPath : ( pathArray ) ->
             sep = FileSystem::pathSeparator
             esc = FileSystem::escapeCharacter
@@ -141,7 +167,10 @@ Here they are.
                 for p in pathArray ).join sep
 
 This function turns relative paths into absolute paths, if given
-a starting (current) directory from which to begin walking.
+a starting (current) directory from which to begin walking.  The
+result is always an absolute path.  No attempt is made to verify
+whether the path is valid in any filesystem, nor is any attempt
+made to canonicalize the path (i.e., apply `.` or `..` entries).
 
         _toAbsolutePath : ( cwdPath, relativePath ) ->
             result =FileSystem::_joinPath \
@@ -155,7 +184,8 @@ a starting (current) directory from which to begin walking.
 This function turns absolute, non-canonical paths (those that may
 contain `.` and `..` entries) into absolute, canonical paths
 (those without such entries).  Note that the input must be an
-absolute path to begin with.
+absolute path to begin with; otherwise the result is undefined.
+The result is always an absolute path.
 
         _toCanonicalPath : ( absolutePath ) ->
             result = [ ]
@@ -171,10 +201,12 @@ absolute path to begin with.
                 result = sep + result
             result
 
-Now, a function to test whether a path is valid in this
+Finally, a function to test whether a path is valid in this
 filesystem.  A path is valid if it is an absolute, canonical path
 that points to a file or folder that actually exists in the
-filesystem.
+filesystem.  This is the one function in this section that must be
+run in an instance of this class; all the above methods are class
+methods.
 
         _isValidCanonicalPath : ( absolutePath ) ->
             path = FileSystem::_splitPath absolutePath
@@ -184,7 +216,12 @@ filesystem.
                 return no if not walk or walk instanceof Array
             yes
 
-Now, the function for changing the cwd.  This simply applies the
+## Working with directories
+
+The functions in this section apply the internal API defined in
+the previous section to create the public API clients expect.
+
+First, the function for changing the cwd.  This simply applies the
 function defined above for converting relative paths to absolute
 ones, if needed, or just copies the absolute path over if not.
 In either case, the path is then made canonical.
