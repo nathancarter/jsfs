@@ -176,6 +176,24 @@
       return true;
     };
 
+    _Class.prototype.type = function(pathToEntry) {
+      var fs, fullpath, step, _i, _len;
+      fullpath = FileSystem.prototype._splitPath(FileSystem.prototype._toCanonicalPath(FileSystem.prototype._toAbsolutePath(this._cwd, pathToEntry)));
+      fs = this._getFilesystemObject();
+      for (_i = 0, _len = fullpath.length; _i < _len; _i++) {
+        step = fullpath[_i];
+        if (!fs.hasOwnProperty(step)) {
+          return null;
+        }
+        fs = fs[step];
+      }
+      if (fs instanceof Array) {
+        return 'file';
+      } else {
+        return 'folder';
+      }
+    };
+
     _Class.prototype.cd = function(path) {
       var newcwd;
       if (path == null) {
@@ -278,12 +296,12 @@
             fname = _this._fileName(number);
             former = localStorage.getItem(fname);
             localStorage.setItem(fname, data);
-            wrote = {
+            fs[name] = [number, data.length];
+            return wrote = {
               past: former,
               name: _this._fileName(number),
               size: data.length
             };
-            return fs[name] = [number, data.length];
           };
         })(this));
         return wrote.size;

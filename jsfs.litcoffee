@@ -222,11 +222,42 @@ methods.
                 return no if not walk or walk instanceof Array
             yes
 
+## Telling files from directories (public API)
+
+The next two sections are about files and directories separately.
+This function allows you to tell them apart.  Asking for the type
+of the entry at a given path will return either the string
+`'file'` if it is a file, the string `'folder'` if it is a folder,
+or null if there is no such entry.
+
+        type : ( pathToEntry ) ->
+
+First split the path into steps.
+
+            fullpath = FileSystem::_splitPath \
+                FileSystem::_toCanonicalPath \
+                FileSystem::_toAbsolutePath @_cwd, pathToEntry
+
+Now find the entry to which the path points.  If at any point, we
+cannot follow the path given, return null to indicate that there
+is no such entry.
+
+            fs = @_getFilesystemObject()
+            for step in fullpath
+                if not fs.hasOwnProperty step
+                    return null
+                fs = fs[step]
+
+If it's an array, then it's data about where to find a file in
+the LocalStorage.  Otherwise, it's a folder object.
+
+            if fs instanceof Array then 'file' else 'folder'
+
 ## Working with directories (public API)
 
-The functions in this section apply the internal API defined in
-the previous section to create the public API clients expect for
-dealing with folders.  For dealing with files, see further below.
+The functions in this section apply the internal API defined
+above to create the public API clients expect for dealing with
+folders.  For dealing with files, see further below.
 
 First, the function for changing the cwd.  This simply applies the
 function defined above for converting relative paths to absolute

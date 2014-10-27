@@ -280,3 +280,61 @@ And yet this has not messed up the other file.
 
             expect( F.read fname ).toBe content
 
+## Distinguishing files from folders
+
+        it 'can tell files from folders', ->
+            F = new window.FileSystem 'example'
+
+The following code sets up a hierarchy of files and folders with
+this structure.
+ * Documents (a folder)
+   * Work (a folder)
+     * To-do list.txt (a file)
+   * Home (a folder)
+     * Movies to see.txt (a file)
+ * Settings (a folder)
+   * SomeApp.xml (a file)
+   * OtherApp.xml (a file)
+
+
+            F.mkdir 'Documents/Work'
+            F.mkdir 'Documents/Home'
+            F.mkdir 'Settings'
+            F.write 'Documents/Work/To-do list.txt',
+                'Buy bread\n
+                 Buy milk\n'
+            F.write 'Documents/Home/Movies to see.txt',
+                'Monty Python and the Holy Grail\n
+                 One Flew Over the Cuckoo\'s Nest'
+            F.write 'Settings/SomeApp.xml',
+                '<settings><example>blah blah</example></settings>'
+            F.write 'Settings/OtherApp.xml',
+                '<settings><key>Foo</key>
+                    <value>ON</value></settings>'
+
+Now we ask what the type of each entry in the filesystem is.
+Files should have type `'file'` and folders should have type
+`'folder'`.
+
+            expect( F.type '' ).toBe 'folder'
+            expect( F.type '/' ).toBe 'folder'
+            expect( F.type 'Documents' ).toBe 'folder'
+            expect( F.type 'Documents/Work' ).toBe 'folder'
+            expect( F.type 'Documents/Home' ).toBe 'folder'
+            expect( F.type 'Settings' ).toBe 'folder'
+            expect( F.type 'Documents/Work/To-do list.txt' )
+                .toBe 'file'
+            expect( F.type 'Documents/Home/Movies to see.txt' )
+                .toBe 'file'
+            expect( F.type 'Settings/SomeApp.xml' ).toBe 'file'
+            expect( F.type 'Settings/OtherApp.xml' ).toBe 'file'
+
+Last, we ask the type of some entries that don't exist in the
+filesystem, and expect to receive the answer "null" in each case.
+
+            expect( F.type 'thing' ).toBeNull()
+            expect( F.type 'Document' ).toBeNull()
+            expect( F.type 'Documents/Wor' ).toBeNull()
+            expect( F.type 'Settings/SomeApp' ).toBeNull()
+            expect( F.type 'Documents/Work/Home' ).toBeNull()
+
