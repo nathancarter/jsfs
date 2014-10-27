@@ -2,3 +2,4 @@ node_modules/
 jsfs.map
 *.swp
 tests/*.js
+.atom-build.json
