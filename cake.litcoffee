@@ -48,7 +48,7 @@ The first step is to call the CoffeeScript compiler.
 
         colors = require 'colors'
         { exec } = require 'child_process'
-        console.log 'Compiling jsfs.litcoffee...'.green
+        console.log 'Compiling jsfs.litcoffee...'
         exec 'coffee --map --compile jsfs.litcoffee',
         { cwd : '.' }, ( err, stdout, stderr ) ->
             if stdout + stderr
@@ -57,7 +57,7 @@ The first step is to call the CoffeeScript compiler.
 
 The next step is to call UglifyJS.
 
-            console.log 'Minifying jsfs.js...'.green
+            console.log 'Minifying jsfs.js...'
             exec './node_modules/uglify-js/bin/uglifyjs
                 -c -m -v false --in-source-map jsfs.map
                 -o jsfs.min.js --source-map jsfs.min.js.map',
@@ -68,7 +68,7 @@ The next step is to call UglifyJS.
 
 Move the compiled files into the release folder.
 
-                console.log 'Moving files to release/...'.green
+                console.log 'Moving files to release/...'
                 exec 'mv jsfs.js jsfs.map jsfs.min.js
                     jsfs.min.js.map release/',
                 { cwd : '.' }, ( err, stdout, stderr ) ->
@@ -78,7 +78,8 @@ Move the compiled files into the release folder.
 
 That's the job!
 
-                    console.log 'Done building jsfs.js.'.green
+                    console.log 'Done compiling and minifying
+                        source into release folder.'.green
                     next()
 
 # Testing
@@ -101,7 +102,7 @@ the CoffeeScript compiler on each.
         count = 0
         for file in toBuild
             do ( file ) ->
-                console.log "Compiling tests/#{file}...".green
+                console.log "Compiling tests/#{file}..."
                 exec "coffee --compile #{file}", { cwd : 'tests' },
                 ( err, stdout, stderr ) ->
                     if stdout + stderr
@@ -109,7 +110,7 @@ the CoffeeScript compiler on each.
                     throw err if err
                     file = file[..-11] + '.js'
                     console.log "Done building
-                        tests/#{file}.".green
+                        tests/#{file}."
 
 Also check to see if the file we just compiled is mentioned in the
 unit testing HTML file.  If not, issue a warning that there is a
@@ -122,6 +123,6 @@ compiled test spec that's unused.
                     if ++count is toBuild.length
                         console.log 'All test specs built.  Open
                             tests/index.html to run them and see
-                            the results.'
+                            the results.'.green
                         next()
 
