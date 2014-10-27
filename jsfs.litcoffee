@@ -306,26 +306,43 @@ filesystem, so that they are reverted if an error is thrown.
             wrote = no
             try
                 @_changeFilesystem ( fs ) =>
+
+Walk down the given path to find the folder in which the file
+should be created.
+
                     for step in fullpath[...-1]
                         if not fs.hasOwnProperty step or
                            fs[step] instanceof Array
                             throw Error 'Invalid folder path'
                         fs = fs[step]
+
+Find the index of the file to which we should write, or create a
+new index if there is none.
+
                     if fs.hasOwnProperty name
                         if fs[name] not instanceof Array
                             throw Error 'Cannot write to a folder'
                         number = fs[name][0]
                     else
                         number = @_nextAvailableFileNumber()
+
+Serialize the data and write it into LocalStorage, updating the
+size information stored in the filesystem.
+
                     data = JSON.stringify content
                     fname = @_fileName number
                     former = localStorage.getItem fname
                     localStorage.setItem fname, data
+                    fs[name] = [ number, data.length ]
+
+Archive the results of the write into the `wrote` variable, so
+that they can returned on success, or read in the `catch` clause,
+below, on failure.
+
                     wrote =
                         past : former
                         name : @_fileName number
                         size : data.length
-                    fs[name] = [ number, data.length ]
                 wrote.size
 
 Any errors will revert the change to the filesystem, but not to
