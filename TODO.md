@@ -12,9 +12,6 @@ and whose values are either another object (for folders) or a
 two-element array (for files), of the form `[index,sizeInBytes]`.
 For any given index $n$, the entry `localStorage.NAME_file_`$n$
 will contain the file's contents, serialized and compressed.
- * `fs.size filename` yields the size in bytes of the file, if it
-   exists, or -1 if it does not.  The filename can be an absolute
-   or relative path.
  * `fs.rm filename` removes the given file or folder, returning
    true on success, or false if the path was invalid.  In the
    case of a folder, the removal is recursive.  All files are

@@ -424,7 +424,42 @@ content, decode it, and return it.
 
             JSON.parse localStorage.getItem @_fileName fs[name][0]
 
-Third, the append function is like a read and a write combined.
+A very similar function to `read` is `size`, which just returns
+the size of the file rather than reading the content.  Because our
+filesystem records the size of each write in the filesystem
+hierarchy object itself, we do not need to read the file's
+contents from LocalStorage to answer the question.
+
+        size : ( filename ) ->
+
+As in `read`, split the path into steps and lift the last one off
+as the filename.
+
+            fullpath = FileSystem::_splitPath \
+                FileSystem::_toCanonicalPath \
+                FileSystem::_toAbsolutePath @_cwd, filename
+            name = fullpath[fullpath.length-1]
+
+Now find the folder containing the file.  The only difference here
+from the `read` function's code is that rather than throw errors
+for invalid paths, we just return -1 as the file size.
+
+            fs = @_getFilesystemObject()
+            for step in fullpath[...-1]
+                if not fs.hasOwnProperty step or
+                   fs[step] instanceof Array then return -1
+                fs = fs[step]
+            if not fs.hasOwnProperty name or
+               fs[name] not instanceof Array then return -1
+
+We've gotten past all the possible errors, so return the file's
+size, which is stored in the second entry of its array.  If the
+result is undefined, then the path was the filesystem root, and so
+the result should be -1.
+
+            fs[name][1] || -1
+
+Finally, the append function is like a read and a write combined.
 It requires that the content to append be a string, and the
 content of the file also be a string.  If either of these is not
 so, an error will be thrown.

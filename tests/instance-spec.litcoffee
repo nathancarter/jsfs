@@ -239,6 +239,14 @@ This tests the file-related functions `read`, `write`, and
 `append`, all of which are used on instances of the `FileSystem`
 class, and modify files (not folders).
 
+Throughout this set of tests, we also record file sizes and
+verify that they are greater than zero on every return from a
+write operation, and that `fs.size` called subsequently returns
+the same size that the write operation did.  We do not check the
+actual string lengths, because these depend on serialization
+techniques, and we do not want such dependencies hard-coded into
+this test suite.
+
         it 'can read and write files to and from storage', ->
             F = new window.FileSystem 'example'
 
@@ -246,8 +254,10 @@ Write some text to a file and ensure it can be re-read.
 
             fname = 'bar.txt'
             content = 'just a string'
-            expect( F.write fname, content ).toBeTruthy()
+            size = F.write fname, content
+            expect( size ).toBeGreaterThan 0
             expect( F.read fname ).toBe content
+            expect( F.size fname ).toBe size
 
 Ensure that trying to read the same file in a subfolder fails,
 and that trying to read a file in a nonexistant folder fails.
@@ -277,26 +287,33 @@ them as well, and that we can write arbitrary objects.
                 key2 : innerObject : 'string'
             }
             fname2 = '/foo/my.obj'
-            expect( F.write fname2, object ).toBeTruthy()
+            size2 = F.write fname2, object
+            expect( size ).toBeGreaterThan 0
             expect( F.read fname2 ).toEqual object
+            expect( F.size fname2 ).toBe size2
 
 And yet this has not messed up the other file.
 
             expect( F.read fname ).toBe content
+            expect( F.size fname ).toBe size
 
 Append some text to the original text file, and ensure it does
 what it's supposed to do.
 
-            expect( F.append fname, ' and more!' ).toBeTruthy()
+            sizeMore = F.append fname, ' and more!'
+            expect( sizeMore ).toBeGreaterThan size
             expect( F.read fname ).toBe content + ' and more!'
+            expect( F.size fname ).toBe sizeMore
 
 Append some text to a non-existant file, and ensure it creates
 the file as if `write` had been called instead.
 
             fname3 = '/some.file.txt'
             shortText = 'short text'
-            expect( F.append fname3, shortText ).toBeTruthy()
+            size3 = F.append fname3, shortText
+            expect( size3 ).toBeGreaterThan 0
             expect( F.read fname3 ).toBe shortText
+            expect( F.size fname3 ).toBe size3
 
 Try to append some text to a file containing an object, and ensure
 that it won't permit us to do so.
@@ -314,6 +331,13 @@ tests are just copied from above, but with `write` changed to
                 'Cannot append to a folder'
             expect( -> F.append 'what/ever/dude', content ) \
                 .toThrowError 'Invalid folder path'
+
+Verify that sizes of folders and/or nonexistant files are -1.
+
+            expect( F.size 'what/ever/dude' ).toBe -1
+            expect( F.size '/' ).toBe -1
+            expect( F.size '/foo' ).toBe -1
+            expect( F.size '/fooooo' ).toBe -1
 
 ## Distinguishing files from folders
 

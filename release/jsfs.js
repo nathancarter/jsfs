@@ -341,6 +341,25 @@
       return JSON.parse(localStorage.getItem(this._fileName(fs[name][0])));
     };
 
+    _Class.prototype.size = function(filename) {
+      var fs, fullpath, name, step, _i, _len, _ref;
+      fullpath = FileSystem.prototype._splitPath(FileSystem.prototype._toCanonicalPath(FileSystem.prototype._toAbsolutePath(this._cwd, filename)));
+      name = fullpath[fullpath.length - 1];
+      fs = this._getFilesystemObject();
+      _ref = fullpath.slice(0, -1);
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        step = _ref[_i];
+        if (!fs.hasOwnProperty(step || fs[step] instanceof Array)) {
+          return -1;
+        }
+        fs = fs[step];
+      }
+      if (!fs.hasOwnProperty(name || !(fs[name] instanceof Array))) {
+        return -1;
+      }
+      return fs[name][1] || -1;
+    };
+
     _Class.prototype.append = function(filename, content) {
       var e, fullpath, name, wrote;
       if (typeof content !== 'string') {
