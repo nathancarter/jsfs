@@ -235,6 +235,10 @@ exists.
 
 ## Reading and writing files
 
+This tests the file-related functions `read`, `write`, and
+`append`, all of which are used on instances of the `FileSystem`
+class, and modify files (not folders).
+
         it 'can read and write files to and from storage', ->
             F = new window.FileSystem 'example'
 
@@ -279,6 +283,37 @@ them as well, and that we can write arbitrary objects.
 And yet this has not messed up the other file.
 
             expect( F.read fname ).toBe content
+
+Append some text to the original text file, and ensure it does
+what it's supposed to do.
+
+            expect( F.append fname, ' and more!' ).toBeTruthy()
+            expect( F.read fname ).toBe content + ' and more!'
+
+Append some text to a non-existant file, and ensure it creates
+the file as if `write` had been called instead.
+
+            fname3 = '/some.file.txt'
+            shortText = 'short text'
+            expect( F.append fname3, shortText ).toBeTruthy()
+            expect( F.read fname3 ).toBe shortText
+
+Try to append some text to a file containing an object, and ensure
+that it won't permit us to do so.
+
+            expect( -> F.append fname2, 'text' )
+                .toThrowError 'Cannot append to a file unless it
+                    contains a string'
+
+Verify that the same errors we get from calls to `write` also show
+up where they're supposed to in calls to `append`.  (Thus these
+tests are just copied from above, but with `write` changed to
+`append`.
+
+            expect( -> F.append '/foo', content ).toThrowError \
+                'Cannot append to a folder'
+            expect( -> F.append 'what/ever/dude', content ) \
+                .toThrowError 'Invalid folder path'
 
 ## Distinguishing files from folders
 

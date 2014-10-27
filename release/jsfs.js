@@ -234,21 +234,25 @@
     };
 
     _Class.prototype._nextAvailableFileNumber = function() {
-      var i, used, usedNumbers, _i, _ref;
+      var i, keys, result, used, usedNumbers, _i, _j, _ref, _ref1;
+      keys = [];
+      for (i = _i = 0, _ref = localStorage.length; 0 <= _ref ? _i < _ref : _i > _ref; i = 0 <= _ref ? ++_i : --_i) {
+        keys.push(localStorage.key(i));
+      }
+      result = [];
       usedNumbers = (function(_this) {
         return function(fs) {
-          var key, result, value;
+          var key, value;
           if (fs == null) {
             fs = _this._getFilesystemObject();
           }
-          result = [];
           for (key in fs) {
             if (!__hasProp.call(fs, key)) continue;
             value = fs[key];
             if (value instanceof Array) {
               result.push(value[0]);
             } else {
-              result.concat(usedNumbers(value));
+              result = result.concat(usedNumbers(value));
             }
           }
           return result;
@@ -260,7 +264,7 @@
       if (used.length === 0) {
         return 0;
       }
-      for (i = _i = 0, _ref = used[used.length - 1] + 1; 0 <= _ref ? _i <= _ref : _i >= _ref; i = 0 <= _ref ? ++_i : --_i) {
+      for (i = _j = 0, _ref1 = used[used.length - 1] + 1; 0 <= _ref1 ? _j <= _ref1 : _j >= _ref1; i = 0 <= _ref1 ? ++_j : --_j) {
         if (__indexOf.call(used, i) < 0) {
           return i;
         }
@@ -335,6 +339,65 @@
         throw Error('No such file in that folder');
       }
       return JSON.parse(localStorage.getItem(this._fileName(fs[name][0])));
+    };
+
+    _Class.prototype.append = function(filename, content) {
+      var e, fullpath, name, wrote;
+      if (typeof content !== 'string') {
+        throw Error('Can only append strings to a file');
+      }
+      fullpath = FileSystem.prototype._splitPath(FileSystem.prototype._toCanonicalPath(FileSystem.prototype._toAbsolutePath(this._cwd, filename)));
+      name = fullpath[fullpath.length - 1];
+      wrote = false;
+      try {
+        this._changeFilesystem((function(_this) {
+          return function(fs) {
+            var data, existingContent, fname, former, number, step, _i, _len, _ref;
+            _ref = fullpath.slice(0, -1);
+            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+              step = _ref[_i];
+              if (!fs.hasOwnProperty(step || fs[step] instanceof Array)) {
+                throw Error('Invalid folder path');
+              }
+              fs = fs[step];
+            }
+            if (fs.hasOwnProperty(name)) {
+              if (!(fs[name] instanceof Array)) {
+                throw Error('Cannot append to a folder');
+              }
+              number = fs[name][0];
+              existingContent = JSON.parse(localStorage.getItem(_this._fileName(fs[name][0])));
+              if (typeof existingContent !== 'string') {
+                throw Error('Cannot append to a file unless it contains a string');
+              }
+              content = existingContent + content;
+            } else {
+              number = _this._nextAvailableFileNumber();
+            }
+            data = JSON.stringify(content);
+            fname = _this._fileName(number);
+            former = localStorage.getItem(fname);
+            localStorage.setItem(fname, data);
+            fs[name] = [number, data.length];
+            return wrote = {
+              past: former,
+              name: _this._fileName(number),
+              size: data.length
+            };
+          };
+        })(this));
+        return wrote.size;
+      } catch (_error) {
+        e = _error;
+        if (wrote) {
+          if (wrote.past) {
+            localStorage.setItem(wrote.name, wrote.past);
+          } else {
+            localStorage.removeItem(wrote.name);
+          }
+        }
+        throw e;
+      }
     };
 
     return _Class;

@@ -12,10 +12,6 @@ and whose values are either another object (for folders) or a
 two-element array (for files), of the form `[index,sizeInBytes]`.
 For any given index $n$, the entry `localStorage.NAME_file_`$n$
 will contain the file's contents, serialized and compressed.
- * `fs.append filename, content` functions just as the previous,
-   but concatenates strings, and thus requires that both the
-   file's already existing content (if any) be a single string,
-   and the new `content` must also be a string.
  * `fs.size filename` yields the size in bytes of the file, if it
    exists, or -1 if it does not.  The filename can be an absolute
    or relative path.

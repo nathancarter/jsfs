@@ -298,13 +298,16 @@ next available number, at which we can store a new file.  The
 following function accomplishes this.
 
         _nextAvailableFileNumber : ->
+            keys = [ ]
+            for i in [0...localStorage.length]
+                keys.push localStorage.key i
+            result = [ ]
             usedNumbers = ( fs = @_getFilesystemObject() ) =>
-                result = [ ]
                 for own key, value of fs
                     if value instanceof Array
                         result.push value[0]
                     else
-                        result.concat usedNumbers value
+                        result = result.concat usedNumbers value
                 result
             used = usedNumbers().sort ( a, b ) -> a - b
             if used.length is 0 then return 0
@@ -420,6 +423,89 @@ We've gotten past all the possible errors, so read the file's
 content, decode it, and return it.
 
             JSON.parse localStorage.getItem @_fileName fs[name][0]
+
+Third, the append function is like a read and a write combined.
+It requires that the content to append be a string, and the
+content of the file also be a string.  If either of these is not
+so, an error will be thrown.
+
+Much of the code below is like that of `write`, above.  So the
+comments here are less than they were above.
+
+        append : ( filename, content ) ->
+            if typeof content isnt 'string'
+                throw Error 'Can only append strings to a file'
+
+First split the path into steps and lift the last one off as the
+filename.
+
+            fullpath = FileSystem::_splitPath \
+                FileSystem::_toCanonicalPath \
+                FileSystem::_toAbsolutePath @_cwd, filename
+            name = fullpath[fullpath.length-1]
+
+As in `write`, use the `try`/`catch` wrapper for safety.
+
+            wrote = no
+            try
+                @_changeFilesystem ( fs ) =>
+
+Find the folder in which the file should be created.
+
+                    for step in fullpath[...-1]
+                        if not fs.hasOwnProperty step or
+                           fs[step] instanceof Array
+                            throw Error 'Invalid folder path'
+                        fs = fs[step]
+
+Find the index of the file to which we should write, or create a
+new index if there is none.  When the file does exist, verify that
+its contents are a string, and if so, glue them onto the content
+passed as parameter.
+
+                    if fs.hasOwnProperty name
+                        if fs[name] not instanceof Array
+                            throw Error 'Cannot append to a folder'
+                        number = fs[name][0]
+                        existingContent = JSON.parse \
+                            localStorage.getItem \
+                            @_fileName fs[name][0]
+                        if typeof existingContent isnt 'string'
+                            throw Error 'Cannot append to a file
+                                unless it contains a string'
+                        content = existingContent + content
+                    else
+                        number = @_nextAvailableFileNumber()
+
+Serialize and write it into LocalStorage, just as we did in
+`write`.
+
+                    data = JSON.stringify content
+                    fname = @_fileName number
+                    former = localStorage.getItem fname
+                    localStorage.setItem fname, data
+                    fs[name] = [ number, data.length ]
+
+Archive the results of the write into the `wrote` variable, just
+as we did in `write`.
+
+                    wrote =
+                        past : former
+                        name : @_fileName number
+                        size : data.length
+                wrote.size
+
+Any errors will revert the change to the filesystem, but not to
+any individual files.  Hence we use the `wrote` variable just like
+we did in the `write` function earlier.
+
+            catch e
+                if wrote
+                    if wrote.past
+                        localStorage.setItem wrote.name, wrote.past
+                    else
+                        localStorage.removeItem wrote.name
+                throw e
 
 ## More to come
 
