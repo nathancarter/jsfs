@@ -577,8 +577,81 @@ we did in the `write` function earlier.
                         localStorage.removeItem wrote.name
                 throw e
 
+## Moving and removing files and folders
+
+The `rm` function (for "remove") removes the entire filesystem
+subtree from a given point on downwards.  The parameter passed must
+be an existing file or folder in the filesystem, and it (and all its
+descendants, if any) will be removed.
+
+This returns true upon successful removal, or false if the path
+given as the parameter does not point to a valid point in the
+filesystem hierarchy.
+
+        rm : ( path ) ->
+
+First, split compute the path array from the given input.
+
+            fullpath = FileSystem::_splitPath \
+                FileSystem::_toCanonicalPath \
+                FileSystem::_toAbsolutePath @_cwd, path
+            name = fullpath[fullpath.length-1]
+
+Now, if they passed in the filesystem root as the folder to be
+deleted, we return false.  We can't remove the whole filesystem
+with this method.
+
+            if not name then return no
+
+This removal ought not to fail, because the files and the hierarchy
+are both smaller, so there should be no cause for error here.  But
+we'll leverage the change wrapper anyway, for consistency.
+
+            @_changeFilesystem ( fs ) =>
+
+Now find the entry in the filesystem at that path.
+
+                for step in fullpath[...-1]
+                    if not fs.hasOwnProperty( step ) or
+                       fs[step] instanceof Array then return no
+                    fs = fs[step]
+                parentFolder = fs
+                if not fs.hasOwnProperty name then return no
+                fs = fs[name]
+
+Now we need a recursive routine to find all the files that exist in
+the filesystem hierarchy, from this point on downwards.  The
+following local function does the job.
+
+                filesBeneath = ( entry ) ->
+
+If the filesystem entry we're looking at *is* a file, then we
+return just that one entry.
+
+                    if entry instanceof Array then return [ entry ]
+
+Otherwise, recur on all its children and concatenate the results.
+
+                    result = [ ]
+                    for own child of entry
+                        result = result.concat filesBeneath \
+                            entry[child]
+                    result
+
+So now we leverage that routine to get a list of all the files we
+need to delete.
+
+                for fArray in filesBeneath fs
+                    localStorage.removeItem @_fileName fArray[0]
+
+Now that all the files have been deleted, we delete teh folder in
+the filesystem, and end this wrapped function, which will then
+trigger a save of the filesystem to LocalStorage.  Return success.
+
+                delete parentFolder[name]
+            yes
+
 ## More to come
 
 There is much more to implement!  This class is not close to done.
 See [the to-do list for this project](TODO.md).
-

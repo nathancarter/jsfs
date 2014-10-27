@@ -469,6 +469,52 @@
       }
     };
 
+    _Class.prototype.rm = function(path) {
+      var fullpath, name;
+      fullpath = FileSystem.prototype._splitPath(FileSystem.prototype._toCanonicalPath(FileSystem.prototype._toAbsolutePath(this._cwd, path)));
+      name = fullpath[fullpath.length - 1];
+      if (!name) {
+        return false;
+      }
+      this._changeFilesystem((function(_this) {
+        return function(fs) {
+          var fArray, filesBeneath, parentFolder, step, _i, _j, _len, _len1, _ref, _ref1;
+          _ref = fullpath.slice(0, -1);
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            step = _ref[_i];
+            if (!fs.hasOwnProperty(step) || fs[step] instanceof Array) {
+              return false;
+            }
+            fs = fs[step];
+          }
+          parentFolder = fs;
+          if (!fs.hasOwnProperty(name)) {
+            return false;
+          }
+          fs = fs[name];
+          filesBeneath = function(entry) {
+            var child, result;
+            if (entry instanceof Array) {
+              return [entry];
+            }
+            result = [];
+            for (child in entry) {
+              if (!__hasProp.call(entry, child)) continue;
+              result = result.concat(filesBeneath(entry[child]));
+            }
+            return result;
+          };
+          _ref1 = filesBeneath(fs);
+          for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+            fArray = _ref1[_j];
+            localStorage.removeItem(_this._fileName(fArray[0]));
+          }
+          return delete parentFolder[name];
+        };
+      })(this));
+      return true;
+    };
+
     return _Class;
 
   })();

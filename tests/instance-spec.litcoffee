@@ -460,3 +460,82 @@ errors at those times.
             expect( -> F.ls() )
                 .toThrowError 'Invalid current working directory'
 
+## Removing folders and files
+
+This test covers the `rm` command, which can be used on both files
+and folders.
+
+        it 'can remove files and folders', ->
+            F = new window.FileSystem 'example'
+
+The following code sets up a hierarchy of files and folders with
+the same structure as in the previous test.
+
+            F.mkdir 'Documents/Work'
+            F.mkdir 'Documents/Home'
+            F.mkdir 'Settings'
+            F.write 'Documents/Work/To-do list.txt',
+                'Buy bread\n
+                 Buy milk\n'
+            F.write 'Documents/Home/Movies to see.txt',
+                'Monty Python and the Holy Grail\n
+                 One Flew Over the Cuckoo\'s Nest'
+            F.write 'Settings/SomeApp.xml',
+                '<settings><example>blah blah</example></settings>'
+            F.write 'Settings/OtherApp.xml',
+                '<settings><key>Foo</key>
+                    <value>ON</value></settings>'
+
+Verify that file #2 in the filesystem is Settings/SomeApp.xml, and
+that its type is a file.  Then remove it.  And verify that its type
+is now null, and that file #2 is no longer in the filesystem.
+
+            expect( JSON.parse localStorage.getItem F._fileName 2 )
+                .toEqual '<settings><example>blah
+                          blah</example></settings>'
+            expect( F.type 'Settings/SomeApp.xml' ).toBe 'file'
+            expect( F.rm 'Settings/SomeApp.xml' ).toBeTruthy()
+            expect( F.type 'Settings/SomeApp.xml' ).toBeNull()
+            expect( localStorage.getItem F._fileName 2 ).toBeNull()
+
+Repeat the previous exercise with the whole Documents folder.
+
+            expect( JSON.parse localStorage.getItem F._fileName 0 )
+                .toEqual 'Buy bread\n
+                          Buy milk\n'
+            expect( JSON.parse localStorage.getItem F._fileName 1 )
+                .toEqual 'Monty Python and the Holy Grail\n
+                          One Flew Over the Cuckoo\'s Nest'
+            expect( F.type 'Documents/Work' ).toBe 'folder'
+            expect( F.type 'Documents/Work/To-do list.txt' )
+                .toBe 'file'
+            expect( F.type 'Documents/Home' ).toBe 'folder'
+            expect( F.type 'Documents/Home/Movies to see.txt' )
+                .toBe 'file'
+            expect( F.rm 'Documents' ).toBeTruthy()
+            expect( localStorage.getItem F._fileName 0 ).toBeNull()
+            expect( localStorage.getItem F._fileName 1 ).toBeNull()
+            expect( F.type 'Documents/Work' ).toBeNull()
+            expect( F.type 'Documents/Work/To-do list.txt' )
+                .toBeNull()
+            expect( F.type 'Documents/Home' ).toBeNull()
+            expect( F.type 'Documents/Home/Movies to see.txt' )
+                .toBeNull()
+
+And yet, the final of the files remains, untouched by all of this.
+
+            expect( JSON.parse localStorage.getItem F._fileName 3 )
+                .toEqual '<settings><key>Foo</key>
+                          <value>ON</value></settings>'
+
+An interesting question then arises:  Will adding a new file
+(correctly) give it index zero?  It ought to, so let us verify
+that fact.
+
+            expect( F.write '/check.txt', '10% gratuity' )
+                .toBeGreaterThan 0
+            expect( JSON.parse localStorage.getItem F._fileName 0 )
+                .toEqual '10% gratuity'
+            expect( JSON.parse localStorage.getItem F._fileName 3 )
+                .toEqual '<settings><key>Foo</key>
+                          <value>ON</value></settings>'

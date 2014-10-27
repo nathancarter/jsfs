@@ -12,10 +12,6 @@ and whose values are either another object (for folders) or a
 two-element array (for files), of the form `[index,sizeInBytes]`.
 For any given index $n$, the entry `localStorage.NAME_file_`$n$
 will contain the file's contents, serialized and compressed.
- * `fs.rm filename` removes the given file or folder, returning
-   true on success, or false if the path was invalid.  In the
-   case of a folder, the removal is recursive.  All files are
-   deleted permanently.
  * `fs.cp src, dest` attempts to copy a single file from the
    source path to the destination path.  Returns true on success
    or false on failure (out of storage space, or invalid
@@ -45,4 +41,3 @@ will contain the file's contents, serialized and compressed.
    specifying the default behavior for `write` and `append`
    calls; the client can choose if it should default to
    compressed or uncompressed saves.
-
