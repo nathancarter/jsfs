@@ -233,6 +233,56 @@
       }
     };
 
+    _Class.prototype.ls = function(type) {
+      var entry, files, folders, fs, fullpath, step, _i, _len;
+      if (type == null) {
+        type = 'all';
+      }
+      fullpath = FileSystem.prototype._splitPath(this._cwd);
+      fs = this._getFilesystemObject();
+      for (_i = 0, _len = fullpath.length; _i < _len; _i++) {
+        step = fullpath[_i];
+        if (!fs.hasOwnProperty(step) || fs[step] instanceof Array) {
+          throw Error('Invalid current working directory');
+        }
+        fs = fs[step];
+      }
+      if (type === 'all' || type === 'files') {
+        files = (function() {
+          var _results;
+          _results = [];
+          for (entry in fs) {
+            if (!__hasProp.call(fs, entry)) continue;
+            if (fs[entry] instanceof Array) {
+              _results.push(entry);
+            }
+          }
+          return _results;
+        })();
+        files.sort();
+        if (type === 'files') {
+          return files;
+        }
+      }
+      folders = (function() {
+        var _results;
+        _results = [];
+        for (entry in fs) {
+          if (!__hasProp.call(fs, entry)) continue;
+          if (!(fs[entry] instanceof Array)) {
+            _results.push(entry);
+          }
+        }
+        return _results;
+      })();
+      folders.sort();
+      if (type === 'all') {
+        return folders.concat(files);
+      } else {
+        return folders;
+      }
+    };
+
     _Class.prototype._nextAvailableFileNumber = function() {
       var i, keys, result, used, usedNumbers, _i, _j, _ref, _ref1;
       keys = [];
@@ -283,7 +333,7 @@
             _ref = fullpath.slice(0, -1);
             for (_i = 0, _len = _ref.length; _i < _len; _i++) {
               step = _ref[_i];
-              if (!fs.hasOwnProperty(step || fs[step] instanceof Array)) {
+              if (!fs.hasOwnProperty(step) || fs[step] instanceof Array) {
                 throw Error('Invalid folder path');
               }
               fs = fs[step];
@@ -330,12 +380,12 @@
       _ref = fullpath.slice(0, -1);
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         step = _ref[_i];
-        if (!fs.hasOwnProperty(step || fs[step] instanceof Array)) {
+        if (!fs.hasOwnProperty(step) || fs[step] instanceof Array) {
           throw Error('Invalid folder path');
         }
         fs = fs[step];
       }
-      if (!fs.hasOwnProperty(name || !(fs[name] instanceof Array))) {
+      if (!fs.hasOwnProperty(name) || !(fs[name] instanceof Array)) {
         throw Error('No such file in that folder');
       }
       return JSON.parse(localStorage.getItem(this._fileName(fs[name][0])));
@@ -349,12 +399,12 @@
       _ref = fullpath.slice(0, -1);
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         step = _ref[_i];
-        if (!fs.hasOwnProperty(step || fs[step] instanceof Array)) {
+        if (!fs.hasOwnProperty(step) || fs[step] instanceof Array) {
           return -1;
         }
         fs = fs[step];
       }
-      if (!fs.hasOwnProperty(name || !(fs[name] instanceof Array))) {
+      if (!fs.hasOwnProperty(name) || !(fs[name] instanceof Array)) {
         return -1;
       }
       return fs[name][1] || -1;
@@ -375,7 +425,7 @@
             _ref = fullpath.slice(0, -1);
             for (_i = 0, _len = _ref.length; _i < _len; _i++) {
               step = _ref[_i];
-              if (!fs.hasOwnProperty(step || fs[step] instanceof Array)) {
+              if (!fs.hasOwnProperty(step) || fs[step] instanceof Array) {
                 throw Error('Invalid folder path');
               }
               fs = fs[step];

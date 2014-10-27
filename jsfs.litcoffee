@@ -291,6 +291,41 @@ store the new filesystem, or if the folder already exists.
             catch e
                 no
 
+The following member function lists all entries in a given folder.
+The parameter says what type fo entries to list, `'files'`,
+`'folders'`, or `'all'` (the default).
+
+        ls : ( type = 'all' ) ->
+
+First split the cwd into steps.
+
+            fullpath = FileSystem::_splitPath @_cwd
+
+Now find the folder to which the cwd points.
+
+            fs = @_getFilesystemObject()
+            for step in fullpath
+                if not fs.hasOwnProperty( step ) or
+                   fs[step] instanceof Array
+                    throw Error 'Invalid current working directory'
+                fs = fs[step]
+
+Now `fs` is the folder whose contents we need to list.  Return
+the entries, filtered if need be.
+
+            if type is 'all' or type is 'files'
+                files = ( entry for own entry of fs when \
+                    fs[entry] instanceof Array )
+                files.sort()
+                if type is 'files' then return files
+            folders = ( entry for own entry of fs when \
+                fs[entry] not instanceof Array )
+            folders.sort()
+            if type is 'all' then folders.concat files else folders
+
+Thus the return value will be undefined if an invalid parameter
+was passed.
+
 ## Dealing with files (internal API)
 
 Files are numbered starting at zero, so we need a way to find the
@@ -345,7 +380,7 @@ Walk down the given path to find the folder in which the file
 should be created.
 
                     for step in fullpath[...-1]
-                        if not fs.hasOwnProperty step or
+                        if not fs.hasOwnProperty( step ) or
                            fs[step] instanceof Array
                             throw Error 'Invalid folder path'
                         fs = fs[step]
@@ -411,11 +446,11 @@ Now find the folder containing the file.
 
             fs = @_getFilesystemObject()
             for step in fullpath[...-1]
-                if not fs.hasOwnProperty step or
+                if not fs.hasOwnProperty( step ) or
                    fs[step] instanceof Array
                     throw Error 'Invalid folder path'
                 fs = fs[step]
-            if not fs.hasOwnProperty name or
+            if not fs.hasOwnProperty( name ) or
                fs[name] not instanceof Array
                 throw Error 'No such file in that folder'
 
@@ -446,10 +481,10 @@ for invalid paths, we just return -1 as the file size.
 
             fs = @_getFilesystemObject()
             for step in fullpath[...-1]
-                if not fs.hasOwnProperty step or
+                if not fs.hasOwnProperty( step ) or
                    fs[step] instanceof Array then return -1
                 fs = fs[step]
-            if not fs.hasOwnProperty name or
+            if not fs.hasOwnProperty( name ) or
                fs[name] not instanceof Array then return -1
 
 We've gotten past all the possible errors, so return the file's
@@ -488,7 +523,7 @@ As in `write`, use the `try`/`catch` wrapper for safety.
 Find the folder in which the file should be created.
 
                     for step in fullpath[...-1]
-                        if not fs.hasOwnProperty step or
+                        if not fs.hasOwnProperty( step ) or
                            fs[step] instanceof Array
                             throw Error 'Invalid folder path'
                         fs = fs[step]

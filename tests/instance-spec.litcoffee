@@ -341,6 +341,10 @@ Verify that sizes of folders and/or nonexistant files are -1.
 
 ## Distinguishing files from folders
 
+This tests both the `type` function of the `FileSystem` class and
+the `ls` function, which can list all entries, just files, or
+just folders.
+
         it 'can tell files from folders', ->
             F = new window.FileSystem 'example'
 
@@ -388,7 +392,7 @@ Files should have type `'file'` and folders should have type
             expect( F.type 'Settings/SomeApp.xml' ).toBe 'file'
             expect( F.type 'Settings/OtherApp.xml' ).toBe 'file'
 
-Last, we ask the type of some entries that don't exist in the
+Next, we ask the type of some entries that don't exist in the
 filesystem, and expect to receive the answer "null" in each case.
 
             expect( F.type 'thing' ).toBeNull()
@@ -396,4 +400,63 @@ filesystem, and expect to receive the answer "null" in each case.
             expect( F.type 'Documents/Wor' ).toBeNull()
             expect( F.type 'Settings/SomeApp' ).toBeNull()
             expect( F.type 'Documents/Work/Home' ).toBeNull()
+
+Finally, we call `ls` on each folder in the filesystem, with each
+of its possible arguments (including an invalid one).  But before
+doing so, we add one file to the Documents folder, so that there
+are a mix of both files and folders in it, for a more thorough
+test.
+
+            expect( F.write 'Documents/a-file.txt', 'foo' ) \
+                .toBeGreaterThan 0
+
+Now proceed with the tests of `ls`.
+
+            # /
+            F.cd '/'
+            expect( F.ls() ).toEqual [ 'Documents', 'Settings' ]
+            expect( F.ls 'all' ).toEqual \
+                [ 'Documents', 'Settings' ]
+            expect( F.ls 'files' ).toEqual [ ]
+            expect( F.ls 'folders' ).toEqual \
+                [ 'Documents', 'Settings' ]
+            # /Documents
+            F.cd 'Documents'
+            expect( F.ls() ).toEqual \
+                [ 'Home', 'Work', 'a-file.txt' ]
+            expect( F.ls 'all' ).toEqual \
+                [ 'Home', 'Work', 'a-file.txt' ]
+            expect( F.ls 'files' ).toEqual [ 'a-file.txt' ]
+            expect( F.ls 'folders' ).toEqual [ 'Home', 'Work' ]
+            # /Documents/Work
+            F.cd 'Work'
+            expect( F.ls() ).toEqual [ 'To-do list.txt' ]
+            expect( F.ls 'all' ).toEqual [ 'To-do list.txt' ]
+            expect( F.ls 'files' ).toEqual [ 'To-do list.txt' ]
+            expect( F.ls 'folders' ).toEqual [ ]
+            # /Documents/Home
+            F.cd '../Home'
+            expect( F.ls() ).toEqual [ 'Movies to see.txt' ]
+            expect( F.ls 'all' ).toEqual [ 'Movies to see.txt' ]
+            expect( F.ls 'files' ).toEqual [ 'Movies to see.txt' ]
+            expect( F.ls 'folders' ).toEqual [ ]
+            # /Settings
+            F.cd '../../Settings'
+            expect( F.ls() ).toEqual \
+                [ 'OtherApp.xml', 'SomeApp.xml' ]
+            expect( F.ls 'all' ).toEqual \
+                [ 'OtherApp.xml', 'SomeApp.xml' ]
+            expect( F.ls 'files' ).toEqual \
+                [ 'OtherApp.xml', 'SomeApp.xml' ]
+            expect( F.ls 'folders' ).toEqual [ ]
+
+We also call `ls` in two invalid folders to verify that it gives
+errors at those times.
+
+            F._cwd = '/Doc'
+            expect( -> F.ls() )
+                .toThrowError 'Invalid current working directory'
+            F._cwd = '/Documents/a-file.txt'
+            expect( -> F.ls() )
+                .toThrowError 'Invalid current working directory'
 

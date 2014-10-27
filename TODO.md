@@ -16,13 +16,6 @@ will contain the file's contents, serialized and compressed.
    true on success, or false if the path was invalid.  In the
    case of a folder, the removal is recursive.  All files are
    deleted permanently.
- * `fs.ls()` returns a map from names of entries in the cwd to
-   strings, either `'file'` or `'folder'`.  If the cwd is
-   invalid, it returns null.  If it is empty, `{}` instead.
- * `fs.ls 'files'` yields only the files, in alpha order.  Or an
-   empty array if there are none.  Or null if cwd invalid.
- * `fs.ls 'folders'` yields only the folders, in alpha order.  Or
-   an empty array if there are none.  Or null if cwd invalid.
  * `fs.cp src, dest` attempts to copy a single file from the
    source path to the destination path.  Returns true on success
    or false on failure (out of storage space, or invalid
