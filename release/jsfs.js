@@ -508,6 +508,57 @@
       return true;
     };
 
+    _Class.prototype.cp = function(source, dest) {
+      var e, file, fs, sourcePath, wrote;
+      fs = this._getFilesystemObject();
+      sourcePath = this.separate(source);
+      file = this.walkPathAndFile(fs, sourcePath);
+      if (!file) {
+        return false;
+      }
+      wrote = null;
+      try {
+        this._changeFilesystem((function(_this) {
+          return function(fs) {
+            var data, destFolder, e, key, name, num, path, _ref;
+            _ref = _this.separateWithFilename(dest), path = _ref.path, name = _ref.name;
+            destFolder = _this.walkPath(fs, path);
+            if (!destFolder) {
+              return;
+            }
+            if (destFolder.hasOwnProperty(name)) {
+              if (destFolder[name] instanceof Array) {
+                return;
+              }
+              destFolder = destFolder[name];
+              name = sourcePath[sourcePath.length - 1];
+              if (destFolder.hasOwnProperty(name)) {
+                return;
+              }
+            }
+            data = localStorage.getItem(_this._fileName(file[0]));
+            num = _this._nextAvailableFileNumber();
+            key = _this._fileName(num);
+            try {
+              localStorage.setItem(key, data);
+            } catch (_error) {
+              e = _error;
+              return;
+            }
+            wrote = key;
+            return destFolder[name] = [num, data.length];
+          };
+        })(this));
+      } catch (_error) {
+        e = _error;
+        if (wrote) {
+          localStorage.removeItem(wrote);
+        }
+        return false;
+      }
+      return wrote !== null;
+    };
+
     return _Class;
 
   })();

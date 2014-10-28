@@ -538,3 +538,52 @@ that fact.
             expect( JSON.parse localStorage.getItem F._fileName 3 )
                 .toEqual '<settings><key>Foo</key>
                           <value>ON</value></settings>'
+
+## Copying files
+
+To perform this test, we only need one folder and two files, in the
+following arrangement.
+ * file1.txt
+ * /folder
+   * file2.txt
+
+
+        it 'can copy files correctly', ->
+            F = new window.FileSystem 'example'
+            F.write 'file1.txt', 'Some text content'
+            F.mkdir 'folder'
+            F.write 'folder/file2.txt', 'This is also text'
+            expect( F.size 'file1.txt' ).toBeGreaterThan 0
+            expect( F.size 'folder/file2.txt' ).toBeGreaterThan 0
+
+First, we copy file1.txt to another name in the same (root) folder.
+
+            expect( F.cp 'file1.txt', 'cp.txt' ).toBeTruthy()
+            expect( F.read 'cp.txt' ).toBe 'Some text content'
+
+Next, we copy it into the folder and verify that that works as well.
+
+            expect( F.cp 'file1.txt', 'folder' ).toBeTruthy()
+            expect( F.read 'folder/file1.txt' ).toBe \
+                'Some text content'
+
+Repeat the previous test, this time specifying a specific filename.
+
+            expect( F.cp 'file1.txt', 'folder/a.txt' ).toBeTruthy()
+            expect( F.read 'folder/a.txt' ).toBe 'Some text content'
+
+Now try overwriting an existing file and be sure that it fails.
+
+            expect( F.cp 'file1.txt', 'folder/file2.txt' ) \
+                .toBeFalsy()
+            expect( F.read 'folder/file2.txt' ).toBe \
+                'This is also text'
+
+Repeat the previous test but this time letting it infer the filename
+when only given a folder as the destination.  (Begin by writing new
+content into folder/file1.txt, for comparison purposes.)
+
+            expect( F.write 'folder/file1.txt', 'New content' ) \
+                .toBeTruthy()
+            expect( F.cp 'file1.txt', 'folder' ).toBeFalsy()
+            expect( F.read 'folder/file1.txt' ).toBe 'New content'

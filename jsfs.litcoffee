@@ -643,7 +643,91 @@ trigger a save of the filesystem to LocalStorage.  Return success.
                 delete folder[name]
             yes
 
+The following function copies a file to a new location in the
+filesystem.  Both parameters should be filenames, but if the
+destination filename is the name of an existing folder, then the
+original file's name will be appended to it.
+
+This will fail if the destination folder does not exist, if the
+destination file already exists, or if there is not enough storage
+space.  Otherwise it will succeed.  Returns true on success, false
+on failure.
+
+        cp : ( source, dest ) ->
+
+Find the file whose data we should copy.
+
+            fs = @_getFilesystemObject()
+            sourcePath = @separate source
+            file = @walkPathAndFile fs, sourcePath
+            if not file then return no
+
+Begin the clause for changing the filesystem hierarchy.
+
+            wrote = null
+            try
+                @_changeFilesystem ( fs ) =>
+
+Find the destination to which we should copy it.  This requires
+considering that the destination might be given as the name of a
+not-yet-existing file, or it might be given as an existing folder.
+Both options are handled here.
+
+                    { path, name } = @separateWithFilename dest
+                    destFolder = @walkPath fs, path
+                    if not destFolder then return
+                    if destFolder.hasOwnProperty name
+                        if destFolder[name] instanceof Array
+                            return
+                        destFolder = destFolder[name]
+                        name = sourcePath[sourcePath.length-1]
+                        if destFolder.hasOwnProperty name
+                            return
+
+So we now know we must copy the data in `file` to the new folder
+`destFolder`, under the name `name`.  So first we read the data that
+we will copy, and try to write it into a new file.  If that fails,
+there is not enough space to do the copy, and we return false.
+
+                    data = localStorage.getItem @_fileName file[0]
+                    num = @_nextAvailableFileNumber()
+                    key = @_fileName num
+                    try
+                        localStorage.setItem key, data
+                    catch e
+                        return
+                    wrote = key
+
+Copying the file's data succeeded, so we try to update the
+filesystem hierarchy to reflect the change.  If this fails, then
+we also revert the file writing we just did, so that everything
+remains consistent; but that happens below.
+
+                    destFolder[name] = [ num, data.length ]
+
+If the above change to the filesystem failed when it tried to write
+it to LocalStorage, then the following `catch` clause will be run.
+
+            catch e
+
+If the `wrote` variable is nonempty, then it will be the key into
+LocalStorage for the file's copied data, and we must therefore
+remove it, to keep the storage consistent with the hierarchy.  In
+any case, we must return false to our caller, because the final
+write failed.
+
+                if wrote then localStorage.removeItem wrote
+                return no
+
+Also, we may have gotten to this point because the copy could not be
+performed for some other reason, and the `try` call quit before ever
+attempting to write to the filesystem.  In that case, `wrote` will
+still be null, and we should return false also.  Otherwise, we must
+return true.
+
+            wrote isnt null
+
 ## More to come
 
-There is a bit more to implement!  This class almost done.
+There is a bit more to implement!  This class is almost done.
 See [the to-do list for this project](TODO.md).

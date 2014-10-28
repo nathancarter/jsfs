@@ -12,11 +12,6 @@ and whose values are either another object (for folders) or a
 two-element array (for files), of the form `[index,sizeInBytes]`.
 For any given index $n$, the entry `localStorage.NAME_file_`$n$
 will contain the file's contents, serialized and compressed.
- * `fs.cp src, dest` attempts to copy a single file from the
-   source path to the destination path.  Returns true on success
-   or false on failure (out of storage space, or invalid
-   destination path).  Does not work on folders, but that feature
-   could be added later.
  * `fs.mv src, dest` functions just like cp, except it moves
    rather than copying.  This means that the entire operation can
    take place only in `localStorage.fileSystem`, without
