@@ -279,7 +279,8 @@ The next two sections are about files and directories separately.
 
 ### type
 
-This function allows you to tell files and folders apart.  Example:
+This function allows you to tell files and folders apart.
+JavaScript example:
  * `if ( F.type( 'foo/bar' ) == 'file' ) { ... }`
 
 Asking for the type of the entry at a given path will return either
@@ -310,7 +311,8 @@ folders.  For dealing with files, see further below.
 
 ### cd
 
-First, the function for changing the cwd.  Examples:
+First, the function for changing the cwd.
+JavaScript examples:
  * `F.cd( '/' )`
  * `F.cd( '../../thing/' )`
 
@@ -326,7 +328,8 @@ canonical.
 
 ### mkdir
 
-The following member function creates a new directory.  Examples:
+The following member function creates a new directory.
+JavaScript examples:
  * `F.mkdir( 'newfoldername' )`
  * `F.mkdir( 'series/of/nested/folders' )`
 
@@ -420,7 +423,8 @@ dealing with files.  For dealing with folders, see earlier.
 
 ### write
 
-First, a function for writing a file to storage.  Examples:
+First, a function for writing a file to storage.
+JavaScript examples:
  * `F.write( 'myfile.txt', 'some string content' )`
  * `F.write( 'folder/file.dat', myJavaScriptObject )`
 
@@ -493,7 +497,8 @@ if anything went wrong:
 ### read
 
 Second, the corresponding function to read the data from a file
-into which we previously wrote it.  Example:
+into which we previously wrote it.
+JavaScript example:
  * `var restoredObject = F.read( 'file.out' )` (no need to do any
    `JSON.parse` yourself)
 
@@ -516,7 +521,8 @@ Read the file's content, decode it, and return it.
 ### size
 
 A very similar function to `read` is `size`, which just returns
-the size of the file rather than reading the content.  Example:
+the size of the file rather than reading the content.
+JavaScript example:
  * `var N = F.size( 'maybe-a-big-file.xml' );`
 
 Because our filesystem records the size of each write in the
@@ -542,7 +548,8 @@ array, or -1 if `file` is undefined.
 Finally, the append function is like a read and a write combined.
 It requires that the content to append be a string, and the
 content of the file also be a string.  If either of these is not
-so, an error will be thrown.  Example:
+so, an error will be thrown.
+JavaScript example:
  * `F.append( 'logs/errors.log', 'An error occurred' );`
 
 Much of the code below is like that of `write`, above.  So the
@@ -625,7 +632,8 @@ we did in the `write` function earlier.
 The `rm` function (for "remove") removes the entire filesystem
 subtree from a given point on downwards.  The parameter passed must
 be an existing file or folder in the filesystem, and it (and all its
-descendants, if any) will be removed.  Examples:
+descendants, if any) will be removed.
+JavaScript examples:
  * `F.rm( 'fileToRemove.txt' )`
  * `F.rm( '/or/even/a/nested/folder' )` (removes recursively)
 
@@ -694,7 +702,8 @@ trigger a save of the filesystem to LocalStorage.  Return success.
 The following function copies a file to a new location in the
 filesystem.  Both parameters should be filenames, but if the
 destination filename is the name of an existing folder, then the
-original file's name will be appended to it.  Examples:
+original file's name will be appended to it.
+JavaScript examples:
  * `F.cp( 'source/file.html', 'destination/newname.html' )`
  * `F.cp( 'source/file.html', 'newfolder' )` (will create file
    newfolder/file.html, assuming newfolder is indeed a folder)
@@ -785,7 +794,8 @@ return true.
 
 The following function moves a file or folder to a new destination
 within the filesystem.  The parameters behave just as in `cp`,
-above, but the source can be an entire folder.  Examples:
+above, but the source can be an entire folder.
+JavaScript examples:
  * `F.mv( 'source/file.html', 'destination/newname.html' )`
  * `F.mv( 'source/file.html', 'newfolder' )` (will create file
    newfolder/file.html, assuming newfolder is indeed a folder)
