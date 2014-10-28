@@ -264,10 +264,9 @@ and that trying to read a file in a nonexistant folder fails.
 
             F.mkdir 'foo'
             F.cd 'foo'
-            expect( -> F.read fname ).toThrowError \
-                'No such file in that folder'
+            expect( -> F.read fname ).toThrowError 'No such file'
             expect( -> F.read 'what/ever/dude' ).toThrowError \
-                'Invalid folder path'
+                'No such file'
 
 Ensure that similar errors occur when attempting to do invalid
 write operations.

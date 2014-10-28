@@ -248,6 +248,31 @@ the path is invalid).
                 name : fullPath[fullPath.length-1]
             }
 
+When one has computed a sequence of nested path names, one of the
+first things you want to do with it is use it to navigate into a
+filesystem hierarchy.  The following function takes a node in the
+filesystem tree and navigates downward from it along the sequence
+of steps in the given path array.  It returns the deeper node on
+success, or null if any of the steps in the chain was invalid.
+
+        walkPath : ( start, pathArray ) ->
+            for step in pathArray
+                if not start.hasOwnProperty( step ) or
+                   start[step] instanceof Array then return null
+                start = start[step]
+            start
+
+The previous function assumes that the path is to a folder, and will
+thus return null if a file is encountered.  The following version
+does the same thing, up until the last step in the path, at which
+point it will accept navigating to a file.
+
+        walkPathAndFile : ( start, pathArray ) =>
+            if pathArray.length is 0 then return start
+            start = @walkPath start, pathArray[...-1]
+            if not start then return null
+            start[pathArray[pathArray.length-1]] or null
+
 ## Telling files from directories (public API)
 
 The next two sections are about files and directories separately.
@@ -256,18 +281,15 @@ of the entry at a given path will return either the string
 `'file'` if it is a file, the string `'folder'` if it is a folder,
 or null if there is no such entry.
 
-        type : ( pathToEntry ) ->
+        type : ( pathToEntry ) =>
 
 Find the entry to which the path points.  If at any point, we
 cannot follow the path given, return null to indicate that there
 is no such entry.
 
             fullpath = @separate pathToEntry
-            fs = @_getFilesystemObject()
-            for step in fullpath
-                if not fs.hasOwnProperty step
-                    return null
-                fs = fs[step]
+            fs = @walkPathAndFile @_getFilesystemObject(), fullpath
+            if not fs then return null
 
 If it's an array, then it's data about where to find a file in
 the LocalStorage.  Otherwise, it's a folder object.
@@ -322,12 +344,9 @@ First split the cwd into steps.
 
 Now find the folder to which the cwd points.
 
-            fs = @_getFilesystemObject()
-            for step in fullpath
-                if not fs.hasOwnProperty( step ) or
-                   fs[step] instanceof Array
-                    throw Error 'Invalid current working directory'
-                fs = fs[step]
+            fs = @walkPath @_getFilesystemObject(), fullpath
+            if not fs
+                throw Error 'Invalid current working directory'
 
 Now `fs` is the folder whose contents we need to list.  Return
 the entries, filtered if need be.
@@ -395,11 +414,8 @@ filesystem, so that they are reverted if an error is thrown.
 Walk down the given path to find the folder in which the file
 should be created.
 
-                    for step in path
-                        if not fs.hasOwnProperty( step ) or
-                           fs[step] instanceof Array
-                            throw Error 'Invalid folder path'
-                        fs = fs[step]
+                    fs = @walkPath fs, path
+                    if not fs then throw Error 'Invalid folder path'
 
 Find the index of the file to which we should write, or create a
 new index if there is none.
@@ -450,27 +466,16 @@ and thus `JSON.parse` is applied to it and the result returned.
 
         read : ( filename ) ->
 
-First split the path into steps and lift the last one off as the
-filename.
+Find the folder containing the file.
 
-            { path, name } = @separateWithFilename filename
-
-Now find the folder containing the file.
-
-            fs = @_getFilesystemObject()
-            for step in path
-                if not fs.hasOwnProperty( step ) or
-                   fs[step] instanceof Array
-                    throw Error 'Invalid folder path'
-                fs = fs[step]
-            if not fs.hasOwnProperty( name ) or
-               fs[name] not instanceof Array
-                throw Error 'No such file in that folder'
+            fs = @walkPathAndFile @_getFilesystemObject(),
+                @separate filename
+            if not fs then throw Error 'No such file'
 
 We've gotten past all the possible errors, so read the file's
 content, decode it, and return it.
 
-            JSON.parse localStorage.getItem @_fileName fs[name][0]
+            JSON.parse localStorage.getItem @_fileName fs[0]
 
 A very similar function to `read` is `size`, which just returns
 the size of the file rather than reading the content.  Because our
@@ -489,20 +494,13 @@ Now find the folder containing the file.  The only difference here
 from the `read` function's code is that rather than throw errors
 for invalid paths, we just return -1 as the file size.
 
-            fs = @_getFilesystemObject()
-            for step in path
-                if not fs.hasOwnProperty( step ) or
-                   fs[step] instanceof Array then return -1
-                fs = fs[step]
-            if not fs.hasOwnProperty( name ) or
-               fs[name] not instanceof Array then return -1
+            fs = @walkPathAndFile @_getFilesystemObject(),
+                path.concat [ name ]
 
-We've gotten past all the possible errors, so return the file's
-size, which is stored in the second entry of its array.  If the
-result is undefined, then the path was the filesystem root, and so
-the result should be -1.
+Return the file's size, which is stored in the second entry of its
+array, or -1 if `fs` is undefined.
 
-            fs[name][1] || -1
+            fs?[1] or -1
 
 Finally, the append function is like a read and a write combined.
 It requires that the content to append be a string, and the
@@ -529,11 +527,8 @@ As in `write`, use the `try`/`catch` wrapper for safety.
 
 Find the folder in which the file should be created.
 
-                    for step in path
-                        if not fs.hasOwnProperty( step ) or
-                           fs[step] instanceof Array
-                            throw Error 'Invalid folder path'
-                        fs = fs[step]
+                    fs = @walkPath fs, path
+                    if not fs then throw Error 'Invalid folder path'
 
 Find the index of the file to which we should write, or create a
 new index if there is none.  When the file does exist, verify that
@@ -595,7 +590,7 @@ This returns true upon successful removal, or false if the path
 given as the parameter does not point to a valid point in the
 filesystem hierarchy.
 
-        rm : ( path ) ->
+        rm : ( path ) =>
 
 First, split compute the path array from the given input.
 
@@ -615,10 +610,9 @@ we'll leverage the change wrapper anyway, for consistency.
 
 Now find the entry in the filesystem at that path.
 
-                for step in path
-                    if not fs.hasOwnProperty( step ) or
-                       fs[step] instanceof Array then return no
-                    fs = fs[step]
+                console.log fs, this, path
+                fs = @walkPath fs, path
+                if not fs then return no
                 parentFolder = fs
                 if not fs.hasOwnProperty name then return no
                 fs = fs[name]
