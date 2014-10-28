@@ -1,22 +1,6 @@
 
 # To-do list for this project
 
-## Main work
-
-For each step below, after implementing it, add a test as well.
-In the bullet points below, `fs` refers to an example instance of
-the class.  It will correspond to an object stored in
-LocalStorage at `localStorage.NAME_filesystem` that will be a
-hierarchy of objects, whose keys are the file or folder names,
-and whose values are either another object (for folders) or a
-two-element array (for files), of the form `[index,sizeInBytes]`.
-For any given index $n$, the entry `localStorage.NAME_file_`$n$
-will contain the file's contents, serialized and compressed.
- * `fs.mv src, dest` functions just like cp, except it moves
-   rather than copying.  This means that the entire operation can
-   take place only in `localStorage.fileSystem`, without
-   reference to the actual files themselves.
-
 ## Adding optional compression
 
  * Import something like

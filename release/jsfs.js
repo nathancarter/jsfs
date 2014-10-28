@@ -520,13 +520,15 @@
       try {
         this._changeFilesystem((function(_this) {
           return function(fs) {
-            var data, destFolder, e, key, name, num, path, _ref;
+            var data, destFolder, destName, e, key, name, num, path, _ref;
             _ref = _this.separateWithFilename(dest), path = _ref.path, name = _ref.name;
             destFolder = _this.walkPath(fs, path);
             if (!destFolder) {
               return;
             }
-            if (destFolder.hasOwnProperty(name)) {
+            if (!name) {
+              destName = sourceName;
+            } else if (destFolder.hasOwnProperty(name)) {
               if (destFolder[name] instanceof Array) {
                 return;
               }
@@ -557,6 +559,47 @@
         return false;
       }
       return wrote !== null;
+    };
+
+    _Class.prototype.mv = function(source, dest) {
+      var e;
+      try {
+        this._changeFilesystem((function(_this) {
+          return function(fs) {
+            var destFolder, destName, name, path, sourceFolder, sourceName, _ref, _ref1;
+            _ref = _this.separateWithFilename(source), path = _ref.path, name = _ref.name;
+            sourceFolder = _this.walkPath(fs, path);
+            if (!sourceFolder || !sourceFolder.hasOwnProperty(name)) {
+              throw Error('No such file or folder');
+            }
+            sourceName = name;
+            _ref1 = _this.separateWithFilename(dest), path = _ref1.path, name = _ref1.name;
+            destFolder = _this.walkPath(fs, path);
+            destName = name;
+            if (!destFolder) {
+              return;
+            }
+            if (!name) {
+              destName = sourceName;
+            } else if (destFolder.hasOwnProperty(name)) {
+              if (destFolder[destName] instanceof Array) {
+                return;
+              }
+              destFolder = destFolder[destName];
+              destName = sourceName;
+              if (destFolder.hasOwnProperty(destName)) {
+                return;
+              }
+            }
+            destFolder[destName] = sourceFolder[sourceName];
+            return delete sourceFolder[sourceName];
+          };
+        })(this));
+      } catch (_error) {
+        e = _error;
+        return false;
+      }
+      return true;
     };
 
     return _Class;

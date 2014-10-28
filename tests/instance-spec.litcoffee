@@ -574,7 +574,7 @@ Repeat the previous test, this time specifying a specific filename.
 
 Now try overwriting an existing file and be sure that it fails.
 
-            expect( F.cp 'file1.txt', 'folder/file2.txt' ) \
+            expect( F.cp 'file1.txt', 'folder/file2.txt' )
                 .toBeFalsy()
             expect( F.read 'folder/file2.txt' ).toBe \
                 'This is also text'
@@ -583,7 +583,92 @@ Repeat the previous test but this time letting it infer the filename
 when only given a folder as the destination.  (Begin by writing new
 content into folder/file1.txt, for comparison purposes.)
 
-            expect( F.write 'folder/file1.txt', 'New content' ) \
+            expect( F.write 'folder/file1.txt', 'New content' )
                 .toBeTruthy()
             expect( F.cp 'file1.txt', 'folder' ).toBeFalsy()
             expect( F.read 'folder/file1.txt' ).toBe 'New content'
+
+## Moving files and folders
+
+In order to test the `mv` function, we create here the same file
+hierarchy we have used in earlier tests.
+
+        it 'can move files correctly', ->
+            F = new window.FileSystem 'example'
+            F.mkdir 'Documents/Work'
+            F.mkdir 'Documents/Home'
+            F.mkdir 'Settings'
+            F.write 'Documents/Work/To-do list.txt',
+                'Buy bread\n
+                 Buy milk\n'
+            F.write 'Documents/Home/Movies to see.txt',
+                'Monty Python and the Holy Grail\n
+                 One Flew Over the Cuckoo\'s Nest'
+            F.write 'Settings/SomeApp.xml',
+                '<settings><example>blah blah</example></settings>'
+            F.write 'Settings/OtherApp.xml',
+                '<settings><key>Foo</key>
+                    <value>ON</value></settings>'
+
+First, let us test moving files.
+
+We begin by moving a file within the same folder.
+
+            expect( F.mv 'Settings/SomeApp.xml', 'Settings/tmp' )
+                .toBeTruthy()
+            expect( F.type 'Settings/SomeApp.xml' ).toBeNull()
+            expect( F.type 'Settings/tmp' ).toBe 'file'
+            expect( F.read 'Settings/tmp' ).toBe \
+                '<settings><example>blah blah</example></settings>'
+
+Now move the file to a new folder, but still specify the filename.
+
+            expect( F.mv 'Settings/tmp', '/tmp' )
+                .toBeTruthy()
+            expect( F.type 'Settings/tmp' ).toBeNull()
+            expect( F.type '/tmp' ).toBe 'file'
+            expect( F.read '/tmp' ).toBe \
+                '<settings><example>blah blah</example></settings>'
+
+Repeat the previous test, this time forcing it to infer the filename.
+
+            expect( F.mv '/tmp', '/Documents' ).toBeTruthy()
+            expect( F.type '/tmp' ).toBeNull()
+            expect( F.type '/Documents/tmp' ).toBe 'file'
+            expect( F.read '/Documents/tmp' ).toBe \
+                '<settings><example>blah blah</example></settings>'
+
+Now we move an entire folder, Documents, to a new name within the
+root folder.
+
+            expect( F.mv '/Documents', '/docs' ).toBeTruthy()
+            expect( F.type '/Documents' ).toBeNull()
+            expect( F.type '/docs' ).toBe 'folder'
+            F.cd '/docs'
+            expect( F.ls() ).toEqual [ 'Home', 'Work', 'tmp' ]
+            F.cd '/'
+            expect( F.read '/docs/tmp' ).toBe \
+                '<settings><example>blah blah</example></settings>'
+
+Now move the docs folder into another folder, but still specify the
+filename.
+
+            expect( F.mv '/docs', '/Settings/docs' ).toBeTruthy()
+            expect( F.type '/docs' ).toBeNull()
+            expect( F.type '/Settings/docs' ).toBe 'folder'
+            F.cd '/Settings/docs'
+            expect( F.ls() ).toEqual [ 'Home', 'Work', 'tmp' ]
+            F.cd '/'
+            expect( F.read '/Settings/docs/tmp' ).toBe \
+                '<settings><example>blah blah</example></settings>'
+
+Repeat the previous test, this time forcing it to infer the newname.
+
+            expect( F.mv '/Settings/docs', '/' ).toBeTruthy()
+            expect( F.type '/Settings/docs' ).toBeNull()
+            expect( F.type '/docs' ).toBe 'folder'
+            F.cd '/docs'
+            expect( F.ls() ).toEqual [ 'Home', 'Work', 'tmp' ]
+            F.cd '/'
+            expect( F.read '/docs/tmp' ).toBe \
+                '<settings><example>blah blah</example></settings>'
