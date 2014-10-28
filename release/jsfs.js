@@ -270,15 +270,18 @@
       }
     };
 
-    _Class.prototype.ls = function(type) {
-      var entry, files, folder, folders, fullpath;
+    _Class.prototype.ls = function(folder, type) {
+      var entry, files, folders, fullpath;
+      if (folder == null) {
+        folder = '.';
+      }
       if (type == null) {
         type = 'all';
       }
-      fullpath = FileSystem.prototype._splitPath(this._cwd);
+      fullpath = this.separate(folder);
       folder = this.walkPath(this._getFilesystemObject(), fullpath);
       if (!folder) {
-        throw Error('Invalid current working directory');
+        throw Error('Invalid folder');
       }
       if (type === 'all' || type === 'files') {
         files = (function() {

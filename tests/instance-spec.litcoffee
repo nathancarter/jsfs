@@ -414,50 +414,86 @@ Now proceed with the tests of `ls`.
             # /
             F.cd '/'
             expect( F.ls() ).toEqual [ 'Documents', 'Settings' ]
-            expect( F.ls 'all' ).toEqual \
+            expect( F.ls '.', 'all' ).toEqual \
                 [ 'Documents', 'Settings' ]
-            expect( F.ls 'files' ).toEqual [ ]
-            expect( F.ls 'folders' ).toEqual \
+            expect( F.ls '.', 'files' ).toEqual [ ]
+            expect( F.ls '.', 'folders' ).toEqual \
                 [ 'Documents', 'Settings' ]
             # /Documents
             F.cd 'Documents'
             expect( F.ls() ).toEqual \
                 [ 'Home', 'Work', 'a-file.txt' ]
-            expect( F.ls 'all' ).toEqual \
+            expect( F.ls '.', 'all' ).toEqual \
                 [ 'Home', 'Work', 'a-file.txt' ]
-            expect( F.ls 'files' ).toEqual [ 'a-file.txt' ]
-            expect( F.ls 'folders' ).toEqual [ 'Home', 'Work' ]
+            expect( F.ls '.', 'files' ).toEqual [ 'a-file.txt' ]
+            expect( F.ls '.', 'folders' ).toEqual [ 'Home', 'Work' ]
             # /Documents/Work
             F.cd 'Work'
             expect( F.ls() ).toEqual [ 'To-do list.txt' ]
-            expect( F.ls 'all' ).toEqual [ 'To-do list.txt' ]
-            expect( F.ls 'files' ).toEqual [ 'To-do list.txt' ]
-            expect( F.ls 'folders' ).toEqual [ ]
+            expect( F.ls '.', 'all' ).toEqual [ 'To-do list.txt' ]
+            expect( F.ls '.', 'files' ).toEqual [ 'To-do list.txt' ]
+            expect( F.ls '.', 'folders' ).toEqual [ ]
             # /Documents/Home
             F.cd '../Home'
             expect( F.ls() ).toEqual [ 'Movies to see.txt' ]
-            expect( F.ls 'all' ).toEqual [ 'Movies to see.txt' ]
-            expect( F.ls 'files' ).toEqual [ 'Movies to see.txt' ]
-            expect( F.ls 'folders' ).toEqual [ ]
+            expect( F.ls '.', 'all' ).toEqual [ 'Movies to see.txt' ]
+            expect( F.ls '.', 'files' ).toEqual [ 'Movies to see.txt' ]
+            expect( F.ls '.', 'folders' ).toEqual [ ]
             # /Settings
             F.cd '../../Settings'
             expect( F.ls() ).toEqual \
                 [ 'OtherApp.xml', 'SomeApp.xml' ]
-            expect( F.ls 'all' ).toEqual \
+            expect( F.ls '.', 'all' ).toEqual \
                 [ 'OtherApp.xml', 'SomeApp.xml' ]
-            expect( F.ls 'files' ).toEqual \
+            expect( F.ls '.', 'files' ).toEqual \
                 [ 'OtherApp.xml', 'SomeApp.xml' ]
-            expect( F.ls 'folders' ).toEqual [ ]
+            expect( F.ls '.', 'folders' ).toEqual [ ]
+
+Repeat the same tests as above, but rather than changing into each
+directory first, just `ls` it from the root folder.
+
+            F.cd '/'
+            # /Documents
+            expect( F.ls 'Documents' ).toEqual \
+                [ 'Home', 'Work', 'a-file.txt' ]
+            expect( F.ls 'Documents', 'all' ).toEqual \
+                [ 'Home', 'Work', 'a-file.txt' ]
+            expect( F.ls 'Documents', 'files' ).toEqual \
+                [ 'a-file.txt' ]
+            expect( F.ls 'Documents', 'folders' ).toEqual \
+                [ 'Home', 'Work' ]
+            # /Documents/Work
+            expect( F.ls 'Documents/Work' ).toEqual\
+                [ 'To-do list.txt' ]
+            expect( F.ls 'Documents/Work', 'all' ).toEqual \
+                [ 'To-do list.txt' ]
+            expect( F.ls 'Documents/Work', 'files' ).toEqual \
+                [ 'To-do list.txt' ]
+            expect( F.ls 'Documents/Work', 'folders' ).toEqual [ ]
+            # /Documents/Home
+            expect( F.ls 'Documents/Home' ).toEqual \
+                [ 'Movies to see.txt' ]
+            expect( F.ls 'Documents/Home', 'all' ).toEqual \
+                [ 'Movies to see.txt' ]
+            expect( F.ls 'Documents/Home', 'files' ).toEqual \
+                [ 'Movies to see.txt' ]
+            expect( F.ls 'Documents/Home', 'folders' ).toEqual [ ]
+            # /Settings
+            expect( F.ls 'Settings' ).toEqual \
+                [ 'OtherApp.xml', 'SomeApp.xml' ]
+            expect( F.ls 'Settings', 'all' ).toEqual \
+                [ 'OtherApp.xml', 'SomeApp.xml' ]
+            expect( F.ls 'Settings', 'files' ).toEqual \
+                [ 'OtherApp.xml', 'SomeApp.xml' ]
+            expect( F.ls 'Settings', 'folders' ).toEqual [ ]
 
 We also call `ls` in two invalid folders to verify that it gives
 errors at those times.
 
             F._cwd = '/Doc'
-            expect( -> F.ls() )
-                .toThrowError 'Invalid current working directory'
+            expect( -> F.ls() ).toThrowError 'Invalid folder'
             F._cwd = '/Documents/a-file.txt'
-            expect( -> F.ls() )
-                .toThrowError 'Invalid current working directory'
+            expect( -> F.ls() ).toThrowError 'Invalid folder'
 
 ## Removing folders and files
 

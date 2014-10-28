@@ -334,20 +334,21 @@ store the new filesystem, or if the folder already exists.
                 no
 
 The following member function lists all entries in a given folder.
-The parameter says what type fo entries to list, `'files'`,
+The first parameter defaults to the current folder, so `F.ls()`
+behaves just like the `ls` command on \*nix systems.
+The second parameter says what type of entries to list, `'files'`,
 `'folders'`, or `'all'` (the default).
 
-        ls : ( type = 'all' ) ->
+        ls : ( folder = '.', type = 'all' ) ->
 
-First split the cwd into steps.
+First split the given folder into steps.
 
-            fullpath = FileSystem::_splitPath @_cwd
+            fullpath = @separate folder
 
 Now find the folder to which the cwd points.
 
             folder = @walkPath @_getFilesystemObject(), fullpath
-            if not folder
-                throw Error 'Invalid current working directory'
+            if not folder then throw Error 'Invalid folder'
 
 Now `folder` is the folder whose contents we need to list.  Return
 the entries, filtered if need be.
