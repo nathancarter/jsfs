@@ -50,15 +50,33 @@ like.
 
 ## The API
 
-You can create and navigate a hierarchy of folders in the usual way,
-with functions `cd`, `ls`, `mkdir`, `rm`, `mv`, `cp`, and query the
-size and types of files with `size` and `type`.  At the moment, the
-only documentation for these things is [in the source
-code](jsfs.litcoffee), which is at least written in a literate style,
-so it's easy to read.
+You can create and navigate a hierarchy of folders with the functions
+listed below.  They are links to the source code, which is written in
+a literate language, so it's documentation, too.
+ * [cd](jsfs.litcoffee#cd)
+ * [ls](jsfs.litcoffee#ls)
+ * [read](jsfs.litcoffee#read)
+ * [write](jsfs.litcoffee#write)
+ * [append](jsfs.litcoffee#append)
+ * [size](jsfs.litcoffee#size)
+ * [type](jsfs.litcoffee#type)
+ * [mv](jsfs.litcoffee#mv)
+ * [cp](jsfs.litcoffee#cp)
+ * [rm](jsfs.litcoffee#rm)
+ * [mkdir](jsfs.litcoffee#mkdir)
+ * [constructor](jsfs.litcoffee#constructor)
 
 ## The future
 
 I'd like to add data compression so that even LocalStorage can hold
 more than just 5MB (uncompressed).  Details appear in [the to-do
 list](TODO.md).
+
+If you'd like to contribute, [please let me
+know](https://github.com/nathancarter) so that we can talk about the
+changes first.  I'm glad to accept pull requests, of course.  Note
+that they will need to come with corresponding additions to the unit
+tests, which appear here.
+ * [tests/index.html](tests/index.html)
+ * [tests/class-spec.litcoffee](tests/class-spec.litcoffee)
+ * [tests/instance-spec.litcoffee](tests/instance-spec.litcoffee)

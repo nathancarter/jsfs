@@ -276,6 +276,9 @@ point it will accept navigating to a file.
 ## Telling files from directories (public API)
 
 The next two sections are about files and directories separately.
+
+### type
+
 This function allows you to tell them apart.  Asking for the type
 of the entry at a given path will return either the string
 `'file'` if it is a file, the string `'folder'` if it is a folder,
@@ -303,6 +306,8 @@ The functions in this section apply the internal API defined
 above to create the public API clients expect for dealing with
 folders.  For dealing with files, see further below.
 
+### cd
+
 First, the function for changing the cwd.  This simply applies the
 function defined above for converting relative paths to absolute
 ones, if needed, or just copies the absolute path over if not.
@@ -312,6 +317,8 @@ In either case, the path is then made canonical.
             newcwd = FileSystem::_toCanonicalPath \
                 FileSystem::_toAbsolutePath @_cwd, path
             @_cwd = newcwd if @_isValidCanonicalPath newcwd
+
+### mkdir
 
 The following member function creates a new directory.  It takes
 as input an absolute or relative path and creates all necessary
@@ -332,6 +339,8 @@ store the new filesystem, or if the folder already exists.
                 hadToAdd
             catch e
                 no
+
+### ls
 
 The following member function lists all entries in a given folder.
 The first parameter defaults to the current folder, so `F.ls()`
@@ -394,6 +403,8 @@ following function accomplishes this.
 The functions in this section apply the internal API defined in
 the previous section to create the public API clients expect for
 dealing with files.  For dealing with folders, see earlier.
+
+### write
 
 First, a function for writing a file to storage.  The file content
 can be any JavaScript object to which `JSON.stringify` can be
@@ -462,6 +473,8 @@ if anything went wrong:
                         localStorage.removeItem wrote.name
                 throw e
 
+### read
+
 Second, the corresponding function to read the data from a file
 into which we previously wrote it.  It is assumed that the string
 in the file is the result of an application of `JSON.stringify`,
@@ -478,6 +491,8 @@ Find the file.
 Read the file's content, decode it, and return it.
 
             JSON.parse localStorage.getItem @_fileName file[0]
+
+### size
 
 A very similar function to `read` is `size`, which just returns
 the size of the file rather than reading the content.  Because our
@@ -498,6 +513,8 @@ Return the file's size, which is stored in the second entry of its
 array, or -1 if `file` is undefined.
 
             file?[1] or -1
+
+### append
 
 Finally, the append function is like a read and a write combined.
 It requires that the content to append be a string, and the
@@ -579,6 +596,8 @@ we did in the `write` function earlier.
 
 ## Moving and removing files and folders
 
+### rm
+
 The `rm` function (for "remove") removes the entire filesystem
 subtree from a given point on downwards.  The parameter passed must
 be an existing file or folder in the filesystem, and it (and all its
@@ -643,6 +662,8 @@ trigger a save of the filesystem to LocalStorage.  Return success.
 
                 delete folder[name]
             yes
+
+### cp
 
 The following function copies a file to a new location in the
 filesystem.  Both parameters should be filenames, but if the
@@ -729,6 +750,8 @@ still be null, and we should return false also.  Otherwise, we must
 return true.
 
             wrote isnt null
+
+### mv
 
 The following function moves a file or folder to a new destination
 within the filesystem.  The parameters behave just as in `cp`,
