@@ -222,6 +222,32 @@ methods.
                 return no if not walk or walk instanceof Array
             yes
 
+Combining all of the tools above yields a function that can take an
+absolute or relative path and turn it into a canonical path, split
+into the array of nested folders, and the filename separately.  This
+function does so, returning an array of nested path names.  E.g.,
+`F.separate 'a/b/../c'` might return `[ 'a', 'c' ]`, if it were
+executed when the root of the filesystem were the cwd.
+
+        separate : ( path ) ->
+            FileSystem::_splitPath FileSystem::_toCanonicalPath \
+                FileSystem::_toAbsolutePath @_cwd, path
+
+It is often desirable to have the results of the previous function
+split so that the filename is separate from the rest of the path.
+(This holds true even if the entry in question is not a file, but a
+folder.)  This function does so, returning an object with two keys,
+`path` (the array of nested folder names) and `name` (the name of
+the innermost entry, which may be a file or a folder, or nothing if
+the path is invalid).
+
+        separateWithFilename : ( path ) =>
+            fullPath = @separate path
+            {
+                path : fullPath[...-1]
+                name : fullPath[fullPath.length-1]
+            }
+
 ## Telling files from directories (public API)
 
 The next two sections are about files and directories separately.
@@ -232,16 +258,11 @@ or null if there is no such entry.
 
         type : ( pathToEntry ) ->
 
-First split the path into steps.
-
-            fullpath = FileSystem::_splitPath \
-                FileSystem::_toCanonicalPath \
-                FileSystem::_toAbsolutePath @_cwd, pathToEntry
-
-Now find the entry to which the path points.  If at any point, we
+Find the entry to which the path points.  If at any point, we
 cannot follow the path given, return null to indicate that there
 is no such entry.
 
+            fullpath = @separate pathToEntry
             fs = @_getFilesystemObject()
             for step in fullpath
                 if not fs.hasOwnProperty step
@@ -276,9 +297,7 @@ false on failure.  It only fails if there was not enough space to
 store the new filesystem, or if the folder already exists.
 
         mkdir : ( path = '.' ) ->
-            newpath = FileSystem::_splitPath \
-                FileSystem::_toCanonicalPath \
-                FileSystem::_toAbsolutePath @_cwd, path
+            newpath = @separate path
             try
                 hadToAdd = no
                 @_changeFilesystem ( fs ) ->
@@ -364,10 +383,7 @@ applied.
 First split the path into steps and lift the last one off as the
 filename.
 
-            fullpath = FileSystem::_splitPath \
-                FileSystem::_toCanonicalPath \
-                FileSystem::_toAbsolutePath @_cwd, filename
-            name = fullpath[fullpath.length-1]
+            { path, name } = @separateWithFilename filename
 
 All write operations must happen inside an attempt to change the
 filesystem, so that they are reverted if an error is thrown.
@@ -379,7 +395,7 @@ filesystem, so that they are reverted if an error is thrown.
 Walk down the given path to find the folder in which the file
 should be created.
 
-                    for step in fullpath[...-1]
+                    for step in path
                         if not fs.hasOwnProperty( step ) or
                            fs[step] instanceof Array
                             throw Error 'Invalid folder path'
@@ -437,15 +453,12 @@ and thus `JSON.parse` is applied to it and the result returned.
 First split the path into steps and lift the last one off as the
 filename.
 
-            fullpath = FileSystem::_splitPath \
-                FileSystem::_toCanonicalPath \
-                FileSystem::_toAbsolutePath @_cwd, filename
-            name = fullpath[fullpath.length-1]
+            { path, name } = @separateWithFilename filename
 
 Now find the folder containing the file.
 
             fs = @_getFilesystemObject()
-            for step in fullpath[...-1]
+            for step in path
                 if not fs.hasOwnProperty( step ) or
                    fs[step] instanceof Array
                     throw Error 'Invalid folder path'
@@ -470,17 +483,14 @@ contents from LocalStorage to answer the question.
 As in `read`, split the path into steps and lift the last one off
 as the filename.
 
-            fullpath = FileSystem::_splitPath \
-                FileSystem::_toCanonicalPath \
-                FileSystem::_toAbsolutePath @_cwd, filename
-            name = fullpath[fullpath.length-1]
+            { path, name } = @separateWithFilename filename
 
 Now find the folder containing the file.  The only difference here
 from the `read` function's code is that rather than throw errors
 for invalid paths, we just return -1 as the file size.
 
             fs = @_getFilesystemObject()
-            for step in fullpath[...-1]
+            for step in path
                 if not fs.hasOwnProperty( step ) or
                    fs[step] instanceof Array then return -1
                 fs = fs[step]
@@ -509,10 +519,7 @@ comments here are less than they were above.
 First split the path into steps and lift the last one off as the
 filename.
 
-            fullpath = FileSystem::_splitPath \
-                FileSystem::_toCanonicalPath \
-                FileSystem::_toAbsolutePath @_cwd, filename
-            name = fullpath[fullpath.length-1]
+            { path, name } = @separateWithFilename filename
 
 As in `write`, use the `try`/`catch` wrapper for safety.
 
@@ -522,7 +529,7 @@ As in `write`, use the `try`/`catch` wrapper for safety.
 
 Find the folder in which the file should be created.
 
-                    for step in fullpath[...-1]
+                    for step in path
                         if not fs.hasOwnProperty( step ) or
                            fs[step] instanceof Array
                             throw Error 'Invalid folder path'
@@ -592,10 +599,7 @@ filesystem hierarchy.
 
 First, split compute the path array from the given input.
 
-            fullpath = FileSystem::_splitPath \
-                FileSystem::_toCanonicalPath \
-                FileSystem::_toAbsolutePath @_cwd, path
-            name = fullpath[fullpath.length-1]
+            { path, name } = @separateWithFilename path
 
 Now, if they passed in the filesystem root as the folder to be
 deleted, we return false.  We can't remove the whole filesystem
@@ -611,7 +615,7 @@ we'll leverage the change wrapper anyway, for consistency.
 
 Now find the entry in the filesystem at that path.
 
-                for step in fullpath[...-1]
+                for step in path
                     if not fs.hasOwnProperty( step ) or
                        fs[step] instanceof Array then return no
                     fs = fs[step]
@@ -653,5 +657,5 @@ trigger a save of the filesystem to LocalStorage.  Return success.
 
 ## More to come
 
-There is much more to implement!  This class is not close to done.
+There is a bit more to implement!  This class almost done.
 See [the to-do list for this project](TODO.md).
