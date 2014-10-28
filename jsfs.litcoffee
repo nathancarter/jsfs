@@ -279,10 +279,12 @@ The next two sections are about files and directories separately.
 
 ### type
 
-This function allows you to tell them apart.  Asking for the type
-of the entry at a given path will return either the string
-`'file'` if it is a file, the string `'folder'` if it is a folder,
-or null if there is no such entry.
+This function allows you to tell files and folders apart.  Example:
+ * `if ( F.type( 'foo/bar' ) == 'file' ) { ... }`
+
+Asking for the type of the entry at a given path will return either
+the string `'file'` if it is a file, the string `'folder'` if it is
+a folder, or null if there is no such entry.
 
         type : ( pathToEntry ) =>
 
@@ -308,10 +310,14 @@ folders.  For dealing with files, see further below.
 
 ### cd
 
-First, the function for changing the cwd.  This simply applies the
-function defined above for converting relative paths to absolute
-ones, if needed, or just copies the absolute path over if not.
-In either case, the path is then made canonical.
+First, the function for changing the cwd.  Examples:
+ * `F.cd( '/' )`
+ * `F.cd( '../../thing/' )`
+
+This simply applies the function defined above for converting
+relative paths to absolute ones, if needed, or just copies the
+absolute path over if not.  In either case, the path is then made
+canonical.
 
         cd : ( path = FileSystem::pathSeparator ) ->
             newcwd = FileSystem::_toCanonicalPath \
@@ -320,11 +326,14 @@ In either case, the path is then made canonical.
 
 ### mkdir
 
-The following member function creates a new directory.  It takes
-as input an absolute or relative path and creates all necessary
-folders en route to the one named.  It returns true on success or
-false on failure.  It only fails if there was not enough space to
-store the new filesystem, or if the folder already exists.
+The following member function creates a new directory.  Examples:
+ * `F.mkdir( 'newfoldername' )`
+ * `F.mkdir( 'series/of/nested/folders' )`
+
+It takes as input an absolute or relative path and creates all
+necessary folders en route to the one named.  It returns true on
+success or false on failure.  It only fails if there was not enough
+space to store the new filesystem, or if the folder already exists.
 
         mkdir : ( path = '.' ) ->
             newpath = @separate path
@@ -343,6 +352,11 @@ store the new filesystem, or if the folder already exists.
 ### ls
 
 The following member function lists all entries in a given folder.
+Examples:
+ * `F.ls()` (current working directory, as goverened by `cd`, above)
+ * `F.ls( '..', 'files' )` (return only files, not folders)
+ * `F.ls( '/', 'folders' )` (return only folders, not files)
+
 The first parameter defaults to the current folder, so `F.ls()`
 behaves just like the `ls` command on \*nix systems.
 The second parameter says what type of entries to list, `'files'`,
@@ -406,9 +420,12 @@ dealing with files.  For dealing with folders, see earlier.
 
 ### write
 
-First, a function for writing a file to storage.  The file content
-can be any JavaScript object to which `JSON.stringify` can be
-applied.
+First, a function for writing a file to storage.  Examples:
+ * `F.write( 'myfile.txt', 'some string content' )`
+ * `F.write( 'folder/file.dat', myJavaScriptObject )`
+
+The file content can be any JavaScript object to which
+`JSON.stringify` can be applied.
 
         write : ( filename, content ) ->
 
@@ -476,9 +493,13 @@ if anything went wrong:
 ### read
 
 Second, the corresponding function to read the data from a file
-into which we previously wrote it.  It is assumed that the string
-in the file is the result of an application of `JSON.stringify`,
-and thus `JSON.parse` is applied to it and the result returned.
+into which we previously wrote it.  Example:
+ * `var restoredObject = F.read( 'file.out' )` (no need to do any
+   `JSON.parse` yourself)
+
+It is assumed that the string in the file is the result of an
+application of `JSON.stringify`, and thus `JSON.parse` is applied
+to it and the result returned.
 
         read : ( filename ) ->
 
@@ -495,10 +516,12 @@ Read the file's content, decode it, and return it.
 ### size
 
 A very similar function to `read` is `size`, which just returns
-the size of the file rather than reading the content.  Because our
-filesystem records the size of each write in the filesystem
-hierarchy object itself, we do not need to read the file's
-contents from LocalStorage to answer the question.
+the size of the file rather than reading the content.  Example:
+ * `var N = F.size( 'maybe-a-big-file.xml' );`
+
+Because our filesystem records the size of each write in the
+filesystem hierarchy object itself, we do not need to read the
+file's contents from LocalStorage to answer the question.
 
         size : ( filename ) ->
 
@@ -519,7 +542,8 @@ array, or -1 if `file` is undefined.
 Finally, the append function is like a read and a write combined.
 It requires that the content to append be a string, and the
 content of the file also be a string.  If either of these is not
-so, an error will be thrown.
+so, an error will be thrown.  Example:
+ * `F.append( 'logs/errors.log', 'An error occurred' );`
 
 Much of the code below is like that of `write`, above.  So the
 comments here are less than they were above.
@@ -601,7 +625,9 @@ we did in the `write` function earlier.
 The `rm` function (for "remove") removes the entire filesystem
 subtree from a given point on downwards.  The parameter passed must
 be an existing file or folder in the filesystem, and it (and all its
-descendants, if any) will be removed.
+descendants, if any) will be removed.  Examples:
+ * `F.rm( 'fileToRemove.txt' )`
+ * `F.rm( '/or/even/a/nested/folder' )` (removes recursively)
 
 This returns true upon successful removal, or false if the path
 given as the parameter does not point to a valid point in the
@@ -668,7 +694,11 @@ trigger a save of the filesystem to LocalStorage.  Return success.
 The following function copies a file to a new location in the
 filesystem.  Both parameters should be filenames, but if the
 destination filename is the name of an existing folder, then the
-original file's name will be appended to it.
+original file's name will be appended to it.  Examples:
+ * `F.cp( 'source/file.html', 'destination/newname.html' )`
+ * `F.cp( 'source/file.html', 'newfolder' )` (will create file
+   newfolder/file.html, assuming newfolder is indeed a folder)
+ * `F.cp( 'copyThis.xml', 'toHere.xml' )` (in cwd)
 
 This will fail if the destination folder does not exist, if the
 destination file already exists, or if there is not enough storage
@@ -755,7 +785,11 @@ return true.
 
 The following function moves a file or folder to a new destination
 within the filesystem.  The parameters behave just as in `cp`,
-above, but the source can be an entire folder.
+above, but the source can be an entire folder.  Examples:
+ * `F.mv( 'source/file.html', 'destination/newname.html' )`
+ * `F.mv( 'source/file.html', 'newfolder' )` (will create file
+   newfolder/file.html, assuming newfolder is indeed a folder)
+ * `F.mv( 'moveThis.xml', 'toHere.xml' )` (in cwd)
 
         mv : ( source, dest ) ->
 
