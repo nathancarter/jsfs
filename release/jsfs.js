@@ -218,13 +218,13 @@
     };
 
     _Class.prototype.type = function(pathToEntry) {
-      var fs, fullpath;
+      var entry, fullpath;
       fullpath = this.separate(pathToEntry);
-      fs = this.walkPathAndFile(this._getFilesystemObject(), fullpath);
-      if (!fs) {
+      entry = this.walkPathAndFile(this._getFilesystemObject(), fullpath);
+      if (!entry) {
         return null;
       }
-      if (fs instanceof Array) {
+      if (entry instanceof Array) {
         return 'file';
       } else {
         return 'folder';
@@ -271,22 +271,22 @@
     };
 
     _Class.prototype.ls = function(type) {
-      var entry, files, folders, fs, fullpath;
+      var entry, files, folder, folders, fullpath;
       if (type == null) {
         type = 'all';
       }
       fullpath = FileSystem.prototype._splitPath(this._cwd);
-      fs = this.walkPath(this._getFilesystemObject(), fullpath);
-      if (!fs) {
+      folder = this.walkPath(this._getFilesystemObject(), fullpath);
+      if (!folder) {
         throw Error('Invalid current working directory');
       }
       if (type === 'all' || type === 'files') {
         files = (function() {
           var _results;
           _results = [];
-          for (entry in fs) {
-            if (!__hasProp.call(fs, entry)) continue;
-            if (fs[entry] instanceof Array) {
+          for (entry in folder) {
+            if (!__hasProp.call(folder, entry)) continue;
+            if (folder[entry] instanceof Array) {
               _results.push(entry);
             }
           }
@@ -300,9 +300,9 @@
       folders = (function() {
         var _results;
         _results = [];
-        for (entry in fs) {
-          if (!__hasProp.call(fs, entry)) continue;
-          if (!(fs[entry] instanceof Array)) {
+        for (entry in folder) {
+          if (!__hasProp.call(folder, entry)) continue;
+          if (!(folder[entry] instanceof Array)) {
             _results.push(entry);
           }
         }
@@ -361,16 +361,16 @@
       try {
         this._changeFilesystem((function(_this) {
           return function(fs) {
-            var data, fname, former, number;
-            fs = _this.walkPath(fs, path);
-            if (!fs) {
+            var data, fname, folder, former, number;
+            folder = _this.walkPath(fs, path);
+            if (!folder) {
               throw Error('Invalid folder path');
             }
-            if (fs.hasOwnProperty(name)) {
-              if (!(fs[name] instanceof Array)) {
+            if (folder.hasOwnProperty(name)) {
+              if (!(folder[name] instanceof Array)) {
                 throw Error('Cannot write to a folder');
               }
-              number = fs[name][0];
+              number = folder[name][0];
             } else {
               number = _this._nextAvailableFileNumber();
             }
@@ -378,7 +378,7 @@
             fname = _this._fileName(number);
             former = localStorage.getItem(fname);
             localStorage.setItem(fname, data);
-            fs[name] = [number, data.length];
+            folder[name] = [number, data.length];
             return wrote = {
               past: former,
               name: _this._fileName(number),
@@ -401,19 +401,18 @@
     };
 
     _Class.prototype.read = function(filename) {
-      var fs;
-      fs = this.walkPathAndFile(this._getFilesystemObject(), this.separate(filename));
-      if (!fs) {
+      var file;
+      file = this.walkPathAndFile(this._getFilesystemObject(), this.separate(filename));
+      if (!file) {
         throw Error('No such file');
       }
-      return JSON.parse(localStorage.getItem(this._fileName(fs[0])));
+      return JSON.parse(localStorage.getItem(this._fileName(file[0])));
     };
 
     _Class.prototype.size = function(filename) {
-      var fs, name, path, _ref;
-      _ref = this.separateWithFilename(filename), path = _ref.path, name = _ref.name;
-      fs = this.walkPathAndFile(this._getFilesystemObject(), path.concat([name]));
-      return (fs != null ? fs[1] : void 0) || -1;
+      var file;
+      file = this.walkPathAndFile(this._getFilesystemObject(), this.separate(filename));
+      return (file != null ? file[1] : void 0) || -1;
     };
 
     _Class.prototype.append = function(filename, content) {
@@ -426,17 +425,17 @@
       try {
         this._changeFilesystem((function(_this) {
           return function(fs) {
-            var data, existingContent, fname, former, number;
-            fs = _this.walkPath(fs, path);
-            if (!fs) {
+            var data, existingContent, fname, folder, former, number;
+            folder = _this.walkPath(fs, path);
+            if (!folder) {
               throw Error('Invalid folder path');
             }
-            if (fs.hasOwnProperty(name)) {
-              if (!(fs[name] instanceof Array)) {
+            if (folder.hasOwnProperty(name)) {
+              if (!(folder[name] instanceof Array)) {
                 throw Error('Cannot append to a folder');
               }
-              number = fs[name][0];
-              existingContent = JSON.parse(localStorage.getItem(_this._fileName(fs[name][0])));
+              number = folder[name][0];
+              existingContent = JSON.parse(localStorage.getItem(_this._fileName(folder[name][0])));
               if (typeof existingContent !== 'string') {
                 throw Error('Cannot append to a file unless it contains a string');
               }
@@ -448,7 +447,7 @@
             fname = _this._fileName(number);
             former = localStorage.getItem(fname);
             localStorage.setItem(fname, data);
-            fs[name] = [number, data.length];
+            folder[name] = [number, data.length];
             return wrote = {
               past: former,
               name: _this._fileName(number),
@@ -478,17 +477,14 @@
       }
       this._changeFilesystem((function(_this) {
         return function(fs) {
-          var fArray, filesBeneath, parentFolder, _i, _len, _ref1;
-          console.log(fs, _this, path);
-          fs = _this.walkPath(fs, path);
-          if (!fs) {
+          var file, filesBeneath, folder, _i, _len, _ref1;
+          folder = _this.walkPath(fs, path);
+          if (!folder) {
             return false;
           }
-          parentFolder = fs;
-          if (!fs.hasOwnProperty(name)) {
+          if (!folder.hasOwnProperty(name)) {
             return false;
           }
-          fs = fs[name];
           filesBeneath = function(entry) {
             var child, result;
             if (entry instanceof Array) {
@@ -501,12 +497,12 @@
             }
             return result;
           };
-          _ref1 = filesBeneath(fs);
+          _ref1 = filesBeneath(folder[name]);
           for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-            fArray = _ref1[_i];
-            localStorage.removeItem(_this._fileName(fArray[0]));
+            file = _ref1[_i];
+            localStorage.removeItem(_this._fileName(file[0]));
           }
-          return delete parentFolder[name];
+          return delete folder[name];
         };
       })(this));
       return true;

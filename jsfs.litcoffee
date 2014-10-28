@@ -288,13 +288,14 @@ cannot follow the path given, return null to indicate that there
 is no such entry.
 
             fullpath = @separate pathToEntry
-            fs = @walkPathAndFile @_getFilesystemObject(), fullpath
-            if not fs then return null
+            entry = @walkPathAndFile @_getFilesystemObject(),
+                fullpath
+            if not entry then return null
 
 If it's an array, then it's data about where to find a file in
 the LocalStorage.  Otherwise, it's a folder object.
 
-            if fs instanceof Array then 'file' else 'folder'
+            if entry instanceof Array then 'file' else 'folder'
 
 ## Working with directories (public API)
 
@@ -344,20 +345,20 @@ First split the cwd into steps.
 
 Now find the folder to which the cwd points.
 
-            fs = @walkPath @_getFilesystemObject(), fullpath
-            if not fs
+            folder = @walkPath @_getFilesystemObject(), fullpath
+            if not folder
                 throw Error 'Invalid current working directory'
 
-Now `fs` is the folder whose contents we need to list.  Return
+Now `folder` is the folder whose contents we need to list.  Return
 the entries, filtered if need be.
 
             if type is 'all' or type is 'files'
-                files = ( entry for own entry of fs when \
-                    fs[entry] instanceof Array )
+                files = ( entry for own entry of folder when \
+                    folder[entry] instanceof Array )
                 files.sort()
                 if type is 'files' then return files
-            folders = ( entry for own entry of fs when \
-                fs[entry] not instanceof Array )
+            folders = ( entry for own entry of folder when \
+                folder[entry] not instanceof Array )
             folders.sort()
             if type is 'all' then folders.concat files else folders
 
@@ -414,16 +415,17 @@ filesystem, so that they are reverted if an error is thrown.
 Walk down the given path to find the folder in which the file
 should be created.
 
-                    fs = @walkPath fs, path
-                    if not fs then throw Error 'Invalid folder path'
+                    folder = @walkPath fs, path
+                    if not folder
+                        throw Error 'Invalid folder path'
 
 Find the index of the file to which we should write, or create a
 new index if there is none.
 
-                    if fs.hasOwnProperty name
-                        if fs[name] not instanceof Array
+                    if folder.hasOwnProperty name
+                        if folder[name] not instanceof Array
                             throw Error 'Cannot write to a folder'
-                        number = fs[name][0]
+                        number = folder[name][0]
                     else
                         number = @_nextAvailableFileNumber()
 
@@ -434,7 +436,7 @@ size information stored in the filesystem.
                     fname = @_fileName number
                     former = localStorage.getItem fname
                     localStorage.setItem fname, data
-                    fs[name] = [ number, data.length ]
+                    folder[name] = [ number, data.length ]
 
 Archive the results of the write into the `wrote` variable, so
 that they can returned on success, or read in the `catch` clause,
@@ -466,16 +468,15 @@ and thus `JSON.parse` is applied to it and the result returned.
 
         read : ( filename ) ->
 
-Find the folder containing the file.
+Find the file.
 
-            fs = @walkPathAndFile @_getFilesystemObject(),
+            file = @walkPathAndFile @_getFilesystemObject(),
                 @separate filename
-            if not fs then throw Error 'No such file'
+            if not file then throw Error 'No such file'
 
-We've gotten past all the possible errors, so read the file's
-content, decode it, and return it.
+Read the file's content, decode it, and return it.
 
-            JSON.parse localStorage.getItem @_fileName fs[0]
+            JSON.parse localStorage.getItem @_fileName file[0]
 
 A very similar function to `read` is `size`, which just returns
 the size of the file rather than reading the content.  Because our
@@ -485,22 +486,17 @@ contents from LocalStorage to answer the question.
 
         size : ( filename ) ->
 
-As in `read`, split the path into steps and lift the last one off
-as the filename.
+Find the file.  The only difference here from the `read` function's
+code is that rather than throw errors for invalid paths, we just
+return -1 as the file size.
 
-            { path, name } = @separateWithFilename filename
-
-Now find the folder containing the file.  The only difference here
-from the `read` function's code is that rather than throw errors
-for invalid paths, we just return -1 as the file size.
-
-            fs = @walkPathAndFile @_getFilesystemObject(),
-                path.concat [ name ]
+            file = @walkPathAndFile @_getFilesystemObject(),
+                @separate filename
 
 Return the file's size, which is stored in the second entry of its
-array, or -1 if `fs` is undefined.
+array, or -1 if `file` is undefined.
 
-            fs?[1] or -1
+            file?[1] or -1
 
 Finally, the append function is like a read and a write combined.
 It requires that the content to append be a string, and the
@@ -527,21 +523,22 @@ As in `write`, use the `try`/`catch` wrapper for safety.
 
 Find the folder in which the file should be created.
 
-                    fs = @walkPath fs, path
-                    if not fs then throw Error 'Invalid folder path'
+                    folder = @walkPath fs, path
+                    if not folder
+                        throw Error 'Invalid folder path'
 
 Find the index of the file to which we should write, or create a
 new index if there is none.  When the file does exist, verify that
 its contents are a string, and if so, glue them onto the content
 passed as parameter.
 
-                    if fs.hasOwnProperty name
-                        if fs[name] not instanceof Array
+                    if folder.hasOwnProperty name
+                        if folder[name] not instanceof Array
                             throw Error 'Cannot append to a folder'
-                        number = fs[name][0]
+                        number = folder[name][0]
                         existingContent = JSON.parse \
                             localStorage.getItem \
-                            @_fileName fs[name][0]
+                            @_fileName folder[name][0]
                         if typeof existingContent isnt 'string'
                             throw Error 'Cannot append to a file
                                 unless it contains a string'
@@ -556,7 +553,7 @@ Serialize and write it into LocalStorage, just as we did in
                     fname = @_fileName number
                     former = localStorage.getItem fname
                     localStorage.setItem fname, data
-                    fs[name] = [ number, data.length ]
+                    folder[name] = [ number, data.length ]
 
 Archive the results of the write into the `wrote` variable, just
 as we did in `write`.
@@ -610,12 +607,9 @@ we'll leverage the change wrapper anyway, for consistency.
 
 Now find the entry in the filesystem at that path.
 
-                console.log fs, this, path
-                fs = @walkPath fs, path
-                if not fs then return no
-                parentFolder = fs
-                if not fs.hasOwnProperty name then return no
-                fs = fs[name]
+                folder = @walkPath fs, path
+                if not folder then return no
+                if not folder.hasOwnProperty name then return no
 
 Now we need a recursive routine to find all the files that exist in
 the filesystem hierarchy, from this point on downwards.  The
@@ -639,14 +633,14 @@ Otherwise, recur on all its children and concatenate the results.
 So now we leverage that routine to get a list of all the files we
 need to delete.
 
-                for fArray in filesBeneath fs
-                    localStorage.removeItem @_fileName fArray[0]
+                for file in filesBeneath folder[name]
+                    localStorage.removeItem @_fileName file[0]
 
-Now that all the files have been deleted, we delete teh folder in
+Now that all the files have been deleted, we delete the folder in
 the filesystem, and end this wrapped function, which will then
 trigger a save of the filesystem to LocalStorage.  Return success.
 
-                delete parentFolder[name]
+                delete folder[name]
             yes
 
 ## More to come
