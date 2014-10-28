@@ -20,6 +20,10 @@ If you're looking for something that can handle a lot of files, you
 should try [filer.js](https://github.com/ebidel/filer.js/) instead,
 but it is based on IndexedDB, with the limitations listed above.
 
+Note that this project does not provide any UI; it is exclusively the
+backend.  Present lists of files and folders to your user in whatever
+UI your project already uses.
+
 ## How to use it
 
 Download [the JavaScript code](release/jsfs.js) or
