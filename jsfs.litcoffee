@@ -401,58 +401,45 @@ First split the path into steps and lift the last one off as the filename.
 
             { path, name } = @separateWithFilename filename
 
-All write operations must happen inside an attempt to change the filesystem,
-so that they are reverted if an error is thrown.
-
-            wrote = no
-            try
-                @_changeFilesystem ( fs ) =>
-
 Walk down the given path to find the folder in which the file should be
 created.
 
-                    folder = @walkPath fs, path
-                    if not folder then throw Error 'Invalid folder path'
+            fs = @_getFilesystemObject()
+            folder = @walkPath fs, path
+            if not folder then throw Error 'Invalid folder path'
 
 Find the index of the file to which we should write, or create a new index
 if there is none.
 
-                    if folder.hasOwnProperty name
-                        if folder[name] not instanceof Array
-                            throw Error 'Cannot write to a folder'
-                        number = folder[name][0]
-                    else
-                        number = @_nextAvailableFileNumber()
+            if folder.hasOwnProperty name
+                if folder[name] not instanceof Array
+                    throw Error 'Cannot write to a folder'
+                number = folder[name][0]
+            else
+                number = @_nextAvailableFileNumber()
 
 Serialize the data and write it into LocalStorage, updating the size
 information stored in the filesystem.
 
-                    data = JSON.stringify content
-                    fname = @_fileName number
-                    former = localStorage.getItem fname
-                    localStorage.setItem fname, data
-                    folder[name] = [ number, data.length ]
+            data = JSON.stringify content
+            fname = @_fileName number
+            former = localStorage.getItem fname
+            localStorage.setItem fname, data
+            folder[name] = [ number, data.length ]
 
-Archive the results of the write into the `wrote` variable, so that they can
-returned on success, or read in the `catch` clause, below, on failure.
+Try to save the new filesystem into LocalStorage.  If this fails, put the
+file back the way it was and return a false value to indicate failure.
 
-                    wrote =
-                        past : former
-                        name : @_fileName number
-                        size : data.length
-                wrote.size
+            if not @_setFilesystemObject fs
+                if former
+                    localStorage.setItem fname, former
+                else
+                    localStorage.removeItem fname
+                return no
 
-Any errors will revert the change to the filesystem, but not to any
-individual files.  Hence we store that information in the `wrote` variable,
-above, so that we can use it to undo things here if anything went wrong:
+Everything succeeded, so return the size of the new file.
 
-            catch e
-                if wrote
-                    if wrote.past
-                        localStorage.setItem wrote.name, wrote.past
-                    else
-                        localStorage.removeItem wrote.name
-                throw e
+            data.length
 
 ### read
 
