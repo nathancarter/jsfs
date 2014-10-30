@@ -241,31 +241,22 @@
     };
 
     _Class.prototype.mkdir = function(path) {
-      var e, hadToAdd, newpath;
+      var addedSomething, fs, newpath, step, walk, _i, _len;
       if (path == null) {
         path = '.';
       }
       newpath = this.separate(path);
-      try {
-        hadToAdd = false;
-        this._changeFilesystem(function(fs) {
-          var step, _i, _len, _results;
-          _results = [];
-          for (_i = 0, _len = newpath.length; _i < _len; _i++) {
-            step = newpath[_i];
-            if (!fs.hasOwnProperty(step)) {
-              fs[step] = {};
-              hadToAdd = true;
-            }
-            _results.push(fs = fs[step]);
-          }
-          return _results;
-        });
-        return hadToAdd;
-      } catch (_error) {
-        e = _error;
-        return false;
+      walk = fs = this._getFilesystemObject();
+      addedSomething = false;
+      for (_i = 0, _len = newpath.length; _i < _len; _i++) {
+        step = newpath[_i];
+        if (!walk.hasOwnProperty(step)) {
+          walk[step] = {};
+          addedSomething = true;
+        }
+        walk = walk[step];
       }
+      return addedSomething && this._setFilesystemObject(fs);
     };
 
     _Class.prototype.ls = function(folder, type) {

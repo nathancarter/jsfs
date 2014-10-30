@@ -310,18 +310,14 @@ failure.  It only fails if there was not enough space to store the new
 filesystem, or if the folder already exists.
 
         mkdir : ( path = '.' ) ->
-            newpath = @separate path
-            try
-                hadToAdd = no
-                @_changeFilesystem ( fs ) ->
-                    for step in newpath
-                        if not fs.hasOwnProperty step
-                            fs[step] = { }
-                            hadToAdd = yes
-                        fs = fs[step]
-                hadToAdd
-            catch e
-                no
+            walk = fs = @_getFilesystemObject()
+            addedSomething = no
+            for step in @separate path
+                if not walk.hasOwnProperty step
+                    walk[step] = { }
+                    addedSomething = yes
+                walk = walk[step]
+            addedSomething and @_setFilesystemObject fs
 
 ### ls
 
