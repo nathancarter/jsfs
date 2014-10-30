@@ -12,8 +12,6 @@
 
     _Class.prototype.escapeCharacter = '\\';
 
-    _Class.prototype._cache = {};
-
     _Class.prototype._storageName = function() {
       return "" + this._name + "_filesystem";
     };
@@ -24,14 +22,22 @@
 
     _Class.prototype._getFilesystemObject = function() {
       var fs;
-      if (FileSystem.prototype._cache.hasOwnProperty(this._name)) {
-        return FileSystem.prototype._cache[this._name];
-      }
-      fs = localStorage.getItem(this._storageName());
+      fs = JSON.parse(localStorage.getItem(this._storageName()));
       if (fs === null) {
-        localStorage.setItem(this._name, JSON.stringify(fs = {}));
+        this._setFilesystemObject(fs = {});
       }
-      return FileSystem.prototype._cache[this._name] = fs;
+      return fs;
+    };
+
+    _Class.prototype._setFilesystemObject = function(fs) {
+      var e;
+      try {
+        localStorage.setItem(this._storageName(), JSON.stringify(fs));
+        return true;
+      } catch (_error) {
+        e = _error;
+        return false;
+      }
     };
 
     function _Class(name) {

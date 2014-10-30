@@ -63,24 +63,6 @@ allowing it to be queried by the `getName` member function.
             F = new window.FileSystem()
             expect( F.getName() ).toEqual 'undefined'
 
-If two are constructed with the same name, they should share the
-same internal filesystem object.  This suggests that the cache is
-working.  Similarly, two with different names should not share
-data.  This test requires reaching in to access a private member
-within the instances, but this is the easiest and most direct
-test.
-
-        it 'with the same name shares one filesystem object', ->
-            F = new window.FileSystem 'example'
-            G = new window.FileSystem 'example'
-            expect( F._getFilesystemObject() ).toBe(
-                    G._getFilesystemObject() )
-            H = new window.FileSystem 'other'
-            expect( F._getFilesystemObject() ).not.toBe(
-                    H._getFilesystemObject() )
-            expect( G._getFilesystemObject() ).not.toBe(
-                    H._getFilesystemObject() )
-
 ## Storage
 
 We first test that the private member for writing to LocalStorage

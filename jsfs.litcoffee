@@ -15,29 +15,27 @@ escape character.
         pathSeparator : '/'
         escapeCharacter : '\\'
 
-The class will keep a mapping from filesystem names to filesystem
-objects, so that multiple instances of this class that point to
-the same filesystem will not cause clashes with one another.
-
-        _cache : { }
-
-When a new instance is created, we will need to be able to add a
-new item to the cache, or look it up if it's already in the
-cache.  The following methods do so.  The first provides the
-naming convention we use in LocalStorage.  The second reads
-existing filesystems from LocalStorage when it can, and creates
-and saves new ones otherwise.
+The following methods establish the naming convention we use in
+LocalStorage.  The first is for storing the filesystem, and the second for
+storing individual files.
 
         _storageName : -> "#{@_name}_filesystem"
         _fileName : ( number ) -> "#{@_name}_file_#{number}"
+
+The next two methods read and write the filesystem object to and from
+LocalStorage.  The second returns false if it failed, which would usually be
+for storage space reasons.
+
         _getFilesystemObject : ->
-            if FileSystem::_cache.hasOwnProperty @_name
-                return FileSystem::_cache[@_name]
-            fs = localStorage.getItem @_storageName()
-            if fs is null
-                localStorage.setItem @_name,
-                    JSON.stringify fs = { }
-            FileSystem::_cache[@_name] = fs
+            fs = JSON.parse localStorage.getItem @_storageName()
+            if fs is null then @_setFilesystemObject fs = { }
+            fs
+        _setFilesystemObject : ( fs ) ->
+            try
+                localStorage.setItem @_storageName(), JSON.stringify fs
+                yes
+            catch e
+                no
 
 ## Constructor
 
