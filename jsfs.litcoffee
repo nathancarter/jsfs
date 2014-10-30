@@ -79,14 +79,8 @@ filesystem is serialized for backup.  If the change fails, the backup is
 restored before the thrown error is permitted to propagate up the stack.
 
         _changeFilesystem : ( changeFunction ) ->
-            fs = @_getFilesystemObject()
-            backup = JSON.stringify fs
-            try
-                changeFunction fs
-                localStorage.setItem @_storageName(), JSON.stringify fs
-            catch e
-                @_cache[@_name] = JSON.parse backup
-                throw e
+            changeFunction fs = @_getFilesystemObject()
+            @_setFilesystemObject fs
 
 ## Dealing with directories (internal API)
 

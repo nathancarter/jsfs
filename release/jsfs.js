@@ -59,17 +59,9 @@
     };
 
     _Class.prototype._changeFilesystem = function(changeFunction) {
-      var backup, e, fs;
-      fs = this._getFilesystemObject();
-      backup = JSON.stringify(fs);
-      try {
-        changeFunction(fs);
-        return localStorage.setItem(this._storageName(), JSON.stringify(fs));
-      } catch (_error) {
-        e = _error;
-        this._cache[this._name] = JSON.parse(backup);
-        throw e;
-      }
+      var fs;
+      changeFunction(fs = this._getFilesystemObject());
+      return this._setFilesystemObject(fs);
     };
 
     simultaneousReplace = function() {
