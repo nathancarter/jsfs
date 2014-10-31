@@ -394,57 +394,43 @@
     };
 
     _Class.prototype.append = function(filename, content) {
-      var e, name, path, wrote, _ref;
+      var data, existingContent, fname, folder, former, fs, name, number, path, _ref;
       if (typeof content !== 'string') {
         throw Error('Can only append strings to a file');
       }
       _ref = this.separateWithFilename(filename), path = _ref.path, name = _ref.name;
-      wrote = false;
-      try {
-        this._changeFilesystem((function(_this) {
-          return function(fs) {
-            var data, existingContent, fname, folder, former, number;
-            folder = _this.walkPath(fs, path);
-            if (!folder) {
-              throw Error('Invalid folder path');
-            }
-            if (folder.hasOwnProperty(name)) {
-              if (!(folder[name] instanceof Array)) {
-                throw Error('Cannot append to a folder');
-              }
-              number = folder[name][0];
-              existingContent = JSON.parse(localStorage.getItem(_this._fileName(folder[name][0])));
-              if (typeof existingContent !== 'string') {
-                throw Error('Cannot append to a file unless it contains a string');
-              }
-              content = existingContent + content;
-            } else {
-              number = _this._nextAvailableFileNumber();
-            }
-            data = JSON.stringify(content);
-            fname = _this._fileName(number);
-            former = localStorage.getItem(fname);
-            localStorage.setItem(fname, data);
-            folder[name] = [number, data.length];
-            return wrote = {
-              past: former,
-              name: _this._fileName(number),
-              size: data.length
-            };
-          };
-        })(this));
-        return wrote.size;
-      } catch (_error) {
-        e = _error;
-        if (wrote) {
-          if (wrote.past) {
-            localStorage.setItem(wrote.name, wrote.past);
-          } else {
-            localStorage.removeItem(wrote.name);
-          }
-        }
-        throw e;
+      fs = this._getFilesystemObject();
+      folder = this.walkPath(fs, path);
+      if (!folder) {
+        throw Error('Invalid folder path');
       }
+      if (folder.hasOwnProperty(name)) {
+        if (!(folder[name] instanceof Array)) {
+          throw Error('Cannot append to a folder');
+        }
+        number = folder[name][0];
+        existingContent = JSON.parse(localStorage.getItem(this._fileName(folder[name][0])));
+        if (typeof existingContent !== 'string') {
+          throw Error('Cannot append to a file unless it contains a string');
+        }
+        content = existingContent + content;
+      } else {
+        number = this._nextAvailableFileNumber();
+      }
+      data = JSON.stringify(content);
+      fname = this._fileName(number);
+      former = localStorage.getItem(fname);
+      localStorage.setItem(fname, data);
+      folder[name] = [number, data.length];
+      if (!this._setFilesystemObject(fs)) {
+        if (former) {
+          localStorage.setItem(fname, former);
+        } else {
+          localStorage.removeItem(fname);
+        }
+        return false;
+      }
+      return data.length;
     };
 
     _Class.prototype.rm = function(path) {

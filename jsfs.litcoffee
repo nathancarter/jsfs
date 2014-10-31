@@ -509,62 +509,50 @@ First split the path into steps and lift the last one off as the filename.
 
             { path, name } = @separateWithFilename filename
 
-As in `write`, use the `try`/`catch` wrapper for safety.
-
-            wrote = no
-            try
-                @_changeFilesystem ( fs ) =>
-
 Find the folder in which the file should be created.
 
-                    folder = @walkPath fs, path
-                    if not folder then throw Error 'Invalid folder path'
+            fs = @_getFilesystemObject()
+            folder = @walkPath fs, path
+            if not folder then throw Error 'Invalid folder path'
 
 Find the index of the file to which we should write, or create a new index
 if there is none.  When the file does exist, verify that its contents are a
 string, and if so, glue them onto the content passed as parameter.
 
-                    if folder.hasOwnProperty name
-                        if folder[name] not instanceof Array
-                            throw Error 'Cannot append to a folder'
-                        number = folder[name][0]
-                        existingContent = JSON.parse localStorage.getItem \
-                            @_fileName folder[name][0]
-                        if typeof existingContent isnt 'string'
-                            throw Error 'Cannot append to a file
-                                unless it contains a string'
-                        content = existingContent + content
-                    else
-                        number = @_nextAvailableFileNumber()
+            if folder.hasOwnProperty name
+                if folder[name] not instanceof Array
+                    throw Error 'Cannot append to a folder'
+                number = folder[name][0]
+                existingContent = JSON.parse localStorage.getItem \
+                    @_fileName folder[name][0]
+                if typeof existingContent isnt 'string'
+                    throw Error 'Cannot append to a file
+                        unless it contains a string'
+                content = existingContent + content
+            else
+                number = @_nextAvailableFileNumber()
 
 Serialize and write it into LocalStorage, just as we did in `write`.
 
-                    data = JSON.stringify content
-                    fname = @_fileName number
-                    former = localStorage.getItem fname
-                    localStorage.setItem fname, data
-                    folder[name] = [ number, data.length ]
+            data = JSON.stringify content
+            fname = @_fileName number
+            former = localStorage.getItem fname
+            localStorage.setItem fname, data
+            folder[name] = [ number, data.length ]
 
-Archive the results of the write into the `wrote` variable, just as we did
-in `write`.
+Try to save the new filesystem into LocalStorage.  If this fails, put the
+file back the way it was and return a false value to indicate failure.
 
-                    wrote =
-                        past : former
-                        name : @_fileName number
-                        size : data.length
-                wrote.size
+            if not @_setFilesystemObject fs
+                if former
+                    localStorage.setItem fname, former
+                else
+                    localStorage.removeItem fname
+                return no
 
-Any errors will revert the change to the filesystem, but not to any
-individual files.  Hence we use the `wrote` variable just like we did in the
-`write` function earlier.
+Everything succeeded, so return the size of the new file.
 
-            catch e
-                if wrote
-                    if wrote.past
-                        localStorage.setItem wrote.name, wrote.past
-                    else
-                        localStorage.removeItem wrote.name
-                throw e
+            data.length
 
 ## Moving and removing files and folders
 
