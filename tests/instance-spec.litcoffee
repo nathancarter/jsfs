@@ -65,60 +65,14 @@ allowing it to be queried by the `getName` member function.
 
 ## Storage
 
-We first test that the private member for writing to LocalStorage
-works in simple cases where nothing goes wrong.
+We test that the private member for writing to LocalStorage works in a
+simple case.
 
-        it 'supports writing with _changeFilesystem', ->
+        it 'supports writing with _setFilesystemObject', ->
             F = new window.FileSystem 'example'
-            F._changeFilesystem ( fs ) -> fs.newFolder = { }
-            result = JSON.parse \
-                localStorage.getItem F._storageName()
+            F._setFilesystemObject newFolder : { }
+            result = JSON.parse localStorage.getItem F._storageName()
             expect( result ).toEqual newFolder : { }
-
-Now we test that if we attempt to change the filesystem in a way
-that causes an error, no changes are recorded because the object
-immediately restores the original version from backup.
-
-        it 'supports writing safely even through errors', ->
-
-First, create a `FileSystem` object and run a null change to
-induce a save to LocalStorage.
-
-            F = new window.FileSystem 'example'
-            F._changeFilesystem ( fs ) ->
-
-Now a simple test to verify the baseline.  We check both the
-in-memory version of the filesystem and the in-storage version.
-
-            result = JSON.parse \
-                localStorage.getItem F._storageName()
-            expect( result ).toEqual { }
-            expect( F._getFilesystemObject() ).toEqual { }
-
-Now make a change that will first edit the filesystem, then throw
-an error.
-
-            error = null
-            try
-                F._changeFilesystem ( fs ) ->
-                    fs.change = { }
-                    throw new Error 'Oops!'
-            catch e
-                error = e
-
-Verify that the error was propagated out of the change call.
-
-            expect( error ).not.toBeNull()
-            expect( error.message ).toEqual 'Oops!'
-
-Verify that we're back to the baseline state; no change happened
-to the filesystem at all.  Again, we check both memory and the
-LocalStorage.
-
-            result = JSON.parse \
-                localStorage.getItem F._storageName()
-            expect( result ).toEqual { }
-            expect( F._getFilesystemObject() ).toEqual { }
 
 ## Changing the working directory
 
@@ -127,9 +81,10 @@ valid vs. invalid canonical paths.
 
         it 'can change the cwd correctly', ->
             F = new window.FileSystem 'example'
-            F._changeFilesystem ( fs ) ->
-                fs.folder1 = inner1a : { }, inner1b : { }
-                fs.folder2 = inner2a : { }
+            F._setFilesystemObject {
+                folder1 : inner1a : { }, inner1b : { }
+                folder2 : inner2a : { }
+            }
 
 The above lines of code make the following file hierarchy, for
 use in the tests below.

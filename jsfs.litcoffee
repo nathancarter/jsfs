@@ -64,24 +64,6 @@ For read-only attributes, we provide getters here.
         getName : -> @_name
         getCwd : -> @_cwd
 
-## Making changes (internal API)
-
-When a change is made to the filesystem (not a file in it, but the actual
-structure of the filesystem, such as moving a file from one folder to
-another), that change must be written to LocalStorage.  The potential
-problem is that such a write may fail, and thus the change to the filesystem
-should also fail, and the filesystem revert to its old state.
-
-The following routine makes this possible.  It is an internal routine that
-runs any function that changes the filesystem, but wraps the execution as
-follows, for safety.  Before executing the change, the current state of the
-filesystem is serialized for backup.  If the change fails, the backup is
-restored before the thrown error is permitted to propagate up the stack.
-
-        _changeFilesystem : ( changeFunction ) ->
-            changeFunction fs = @_getFilesystemObject()
-            @_setFilesystemObject fs
-
 ## Dealing with directories (internal API)
 
 There will be several situations in which we need to deal with path strings.

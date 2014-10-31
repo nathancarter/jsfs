@@ -58,12 +58,6 @@
       return this._cwd;
     };
 
-    _Class.prototype._changeFilesystem = function(changeFunction) {
-      var fs;
-      changeFunction(fs = this._getFilesystemObject());
-      return this._setFilesystemObject(fs);
-    };
-
     simultaneousReplace = function() {
       var found, i, result, string, swaps, _i, _ref;
       string = arguments[0], swaps = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
