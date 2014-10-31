@@ -1,5 +1,5 @@
 
-# FileSystem Class Tests
+# Testing Instances of the FileSystem Class
 
 These tests are about instances of the `FileSystem` class, and thus this
 will be where the majority of the tests for this repository lie.

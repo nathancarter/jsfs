@@ -1,5 +1,5 @@
 
-# The FileSystem Class
+# Testing the FileSystem Class
 
 These tests are about the `FileSystem` class itself, as opposed to instances
 thereof.
