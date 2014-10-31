@@ -512,44 +512,35 @@
     };
 
     _Class.prototype.mv = function(source, dest) {
-      var e;
-      try {
-        this._changeFilesystem((function(_this) {
-          return function(fs) {
-            var destFolder, destName, name, path, sourceFolder, sourceName, _ref, _ref1;
-            _ref = _this.separateWithFilename(source), path = _ref.path, name = _ref.name;
-            sourceFolder = _this.walkPath(fs, path);
-            if (!sourceFolder || !sourceFolder.hasOwnProperty(name)) {
-              throw Error('No such file or folder');
-            }
-            sourceName = name;
-            _ref1 = _this.separateWithFilename(dest), path = _ref1.path, name = _ref1.name;
-            destFolder = _this.walkPath(fs, path);
-            destName = name;
-            if (!destFolder) {
-              return;
-            }
-            if (!name) {
-              destName = sourceName;
-            } else if (destFolder.hasOwnProperty(name)) {
-              if (destFolder[destName] instanceof Array) {
-                return;
-              }
-              destFolder = destFolder[destName];
-              destName = sourceName;
-              if (destFolder.hasOwnProperty(destName)) {
-                return;
-              }
-            }
-            destFolder[destName] = sourceFolder[sourceName];
-            return delete sourceFolder[sourceName];
-          };
-        })(this));
-      } catch (_error) {
-        e = _error;
-        return false;
+      var destFolder, destName, fs, name, path, sourceFolder, sourceName, _ref, _ref1;
+      fs = this._getFilesystemObject();
+      _ref = this.separateWithFilename(source), path = _ref.path, name = _ref.name;
+      sourceFolder = this.walkPath(fs, path);
+      if (!sourceFolder || !sourceFolder.hasOwnProperty(name)) {
+        throw Error('No such file or folder');
       }
-      return true;
+      sourceName = name;
+      _ref1 = this.separateWithFilename(dest), path = _ref1.path, name = _ref1.name;
+      destFolder = this.walkPath(fs, path);
+      destName = name;
+      if (!destFolder) {
+        return;
+      }
+      if (!name) {
+        destName = sourceName;
+      } else if (destFolder.hasOwnProperty(name)) {
+        if (destFolder[destName] instanceof Array) {
+          return;
+        }
+        destFolder = destFolder[destName];
+        destName = sourceName;
+        if (destFolder.hasOwnProperty(destName)) {
+          return;
+        }
+      }
+      destFolder[destName] = sourceFolder[sourceName];
+      delete sourceFolder[sourceName];
+      return this._setFilesystemObject(fs);
     };
 
     return _Class;

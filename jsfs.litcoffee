@@ -693,19 +693,14 @@ JavaScript examples:
 
         mv : ( source, dest ) ->
 
-Begin the clause for changing the filesystem hierarchy.
-
-            try
-                @_changeFilesystem ( fs ) =>
-
 Find the file or folder we should copy.
 
-                    { path, name } = @separateWithFilename source
-                    sourceFolder = @walkPath fs, path
-                    if not sourceFolder or
-                       not sourceFolder.hasOwnProperty name
-                        throw Error 'No such file or folder'
-                    sourceName = name
+            fs = @_getFilesystemObject()
+            { path, name } = @separateWithFilename source
+            sourceFolder = @walkPath fs, path
+            if not sourceFolder or not sourceFolder.hasOwnProperty name
+                throw Error 'No such file or folder'
+            sourceName = name
 
 Find the destination to which we should copy it.  This requires considering
 that the destination might be given as the name of a not-yet-existing file
@@ -713,35 +708,24 @@ or folder, or it might be given as an existing folder.  Both options are
 handled here (also taking into account the possibility that the name may be
 undefined if the path is the root).
 
-                    { path, name } = @separateWithFilename dest
-                    destFolder = @walkPath fs, path
-                    destName = name
-                    if not destFolder then return
-                    if not name then destName = sourceName
-                    else if destFolder.hasOwnProperty name
-                        if destFolder[destName] instanceof Array then return
-                        destFolder = destFolder[destName]
-                        destName = sourceName
-                        if destFolder.hasOwnProperty destName then return
+            { path, name } = @separateWithFilename dest
+            destFolder = @walkPath fs, path
+            destName = name
+            if not destFolder then return
+            if not name then destName = sourceName
+            else if destFolder.hasOwnProperty name
+                if destFolder[destName] instanceof Array then return
+                destFolder = destFolder[destName]
+                destName = sourceName
+                if destFolder.hasOwnProperty destName then return
 
 So we now know we must move the object `sourceFolder[sourceName]` to sit
 within `destFolder` instead.  No change to the actual files need be done;
 this is only a move within the hierarchy.
 
-                    destFolder[destName] = sourceFolder[sourceName]
-                    delete sourceFolder[sourceName]
-
-If the above change to the filesystem failed when it tried to write it to
-LocalStorage, then the following `catch` clause will be run. So we return
-false from within that clause, to indicate that the move failed.  The clause
-will have already repaired the filesystem to its original state.
-
-            catch e
-                return no
-
-Otherwise, things succeeded, and we can return success.
-
-            yes
+            destFolder[destName] = sourceFolder[sourceName]
+            delete sourceFolder[sourceName]
+            @_setFilesystemObject fs
 
 ## More to come
 
