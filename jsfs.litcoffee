@@ -580,47 +580,44 @@ return false.  We can't remove the whole filesystem with this method.
 
             if not name then return no
 
-This removal ought not to fail, because the files and the hierarchy are both
-smaller, so there should be no cause for error here.  But we'll leverage the
-change wrapper anyway, for consistency.
-
-            @_changeFilesystem ( fs ) =>
-
 Now find the entry in the filesystem at that path.
 
-                folder = @walkPath fs, path
-                if not folder then return no
-                if not folder.hasOwnProperty name then return no
+            fs = @_getFilesystemObject()
+            folder = @walkPath fs, path
+            if not folder then return no
+            if not folder.hasOwnProperty name then return no
 
 Now we need a recursive routine to find all the files that exist in the
 filesystem hierarchy, from this point on downwards.  The following local
 function does the job.
 
-                filesBeneath = ( entry ) ->
+            filesBeneath = ( entry ) ->
 
-If the filesystem entry we're looking at *is* a file, then we
-return just that one entry.
+If the filesystem entry we're looking at *is* a file, then we return just
+that one entry.
 
-                    if entry instanceof Array then return [ entry ]
+                if entry instanceof Array then return [ entry ]
 
 Otherwise, recur on all its children and concatenate the results.
 
-                    result = [ ]
-                    for own child of entry
-                        result = result.concat filesBeneath entry[child]
-                    result
+                result = [ ]
+                for own child of entry
+                    result = result.concat filesBeneath entry[child]
+                result
 
 So now we leverage that routine to get a list of all the files we need to
 delete.
 
-                for file in filesBeneath folder[name]
-                    localStorage.removeItem @_fileName file[0]
+            for file in filesBeneath folder[name]
+                localStorage.removeItem @_fileName file[0]
 
 Now that all the files have been deleted, we delete the folder in the
-filesystem, and end this wrapped function, which will then trigger a save of
-the filesystem to LocalStorage.  Return success.
+filesystem, and save the filesystem object, and return success.  (The only
+thing that should make the save fail should be a lack of space, but this
+routine deletes things, so all should go fine.)
 
-                delete folder[name]
+            delete folder[name]
+            @_setFilesystemObject fs
             yes
 
 ### cp

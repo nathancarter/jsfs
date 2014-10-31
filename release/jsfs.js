@@ -434,41 +434,38 @@
     };
 
     _Class.prototype.rm = function(path) {
-      var name, _ref;
+      var file, filesBeneath, folder, fs, name, _i, _len, _ref, _ref1;
       _ref = this.separateWithFilename(path), path = _ref.path, name = _ref.name;
       if (!name) {
         return false;
       }
-      this._changeFilesystem((function(_this) {
-        return function(fs) {
-          var file, filesBeneath, folder, _i, _len, _ref1;
-          folder = _this.walkPath(fs, path);
-          if (!folder) {
-            return false;
-          }
-          if (!folder.hasOwnProperty(name)) {
-            return false;
-          }
-          filesBeneath = function(entry) {
-            var child, result;
-            if (entry instanceof Array) {
-              return [entry];
-            }
-            result = [];
-            for (child in entry) {
-              if (!__hasProp.call(entry, child)) continue;
-              result = result.concat(filesBeneath(entry[child]));
-            }
-            return result;
-          };
-          _ref1 = filesBeneath(folder[name]);
-          for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-            file = _ref1[_i];
-            localStorage.removeItem(_this._fileName(file[0]));
-          }
-          return delete folder[name];
-        };
-      })(this));
+      fs = this._getFilesystemObject();
+      folder = this.walkPath(fs, path);
+      if (!folder) {
+        return false;
+      }
+      if (!folder.hasOwnProperty(name)) {
+        return false;
+      }
+      filesBeneath = function(entry) {
+        var child, result;
+        if (entry instanceof Array) {
+          return [entry];
+        }
+        result = [];
+        for (child in entry) {
+          if (!__hasProp.call(entry, child)) continue;
+          result = result.concat(filesBeneath(entry[child]));
+        }
+        return result;
+      };
+      _ref1 = filesBeneath(folder[name]);
+      for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+        file = _ref1[_i];
+        localStorage.removeItem(this._fileName(file[0]));
+      }
+      delete folder[name];
+      this._setFilesystemObject(fs);
       return true;
     };
 
