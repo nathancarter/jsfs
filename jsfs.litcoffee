@@ -96,6 +96,14 @@ The current working directory (cwd hereafter) is initialized to the root.
 
             @_cwd = FileSystem::pathSeparator # i.e., /
 
+Whether or not to use compression defaults to false.  This way clients who
+do not import the
+[lz-string](http://pieroxy.net/blog/pages/lz-string/index.html) library will
+not get errors.  This can be changed directly, since it does not use the
+initial underscore to mark it as private.
+
+            @compressionDefault = no
+
 For read-only attributes, we provide getters here.
 
         getName : -> @_name
@@ -414,7 +422,7 @@ JavaScript examples:
 The file content can be any JavaScript object to which `JSON.stringify` can
 be applied.
 
-        write : ( filename, content ) ->
+        write : ( filename, content, compress = @compressionDefault ) ->
 
 First split the path into steps and lift the last one off as the filename.
 
@@ -440,9 +448,12 @@ later writing fails and we must undo this.
                 file = [ @_nextAvailableFileNumber(), 0 ]
                 former = null
 
-Write the new contents to the file and store the new file
-size in the filesystem.
+Write the new contents to the file and store the new file size in the
+filesystem.  Remember whether it was compressed, in case we need to undo,
+below.
 
+            wasCompressed = file[2]
+            file[2] = compress
             @_writeFile file, content
             folder[name] = file
 
@@ -450,6 +461,7 @@ Try to save the new filesystem into LocalStorage.  If this fails, put the
 file back the way it was and return a false value to indicate failure.
 
             if not @_setFilesystemObject fs
+                file[2] = wasCompressed
                 if former
                     @_writeFile file, former
                 else
@@ -514,7 +526,7 @@ JavaScript example:
 Much of the code below is like that of `write`, above.  So the comments here
 are less than they were above.
 
-        append : ( filename, content ) ->
+        append : ( filename, content, compress = @compressionDefault ) ->
             if typeof content isnt 'string'
                 throw Error 'Can only append strings to a file'
 
@@ -547,6 +559,8 @@ string, and if so, glue them onto the content passed as parameter.
 
 Serialize and write it into LocalStorage, just as we did in `write`.
 
+            wasCompressed = file[2]
+            file[2] = compress
             @_writeFile file, content
             folder[name] = file
 
@@ -554,6 +568,7 @@ Try to save the new filesystem into LocalStorage.  If this fails, put the
 file back the way it was and return a false value to indicate failure.
 
             if not @_setFilesystemObject fs
+                file[2] = wasCompressed
                 if former
                     @_writeFile file, former
                 else

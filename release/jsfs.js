@@ -77,6 +77,7 @@
       this._name = ("" + name) || 'undefined';
       this._getFilesystemObject();
       this._cwd = FileSystem.prototype.pathSeparator;
+      this.compressionDefault = false;
     }
 
     _Class.prototype.getName = function() {
@@ -369,8 +370,11 @@
       }
     };
 
-    _Class.prototype.write = function(filename, content) {
-      var file, folder, former, fs, name, path, _ref;
+    _Class.prototype.write = function(filename, content, compress) {
+      var file, folder, former, fs, name, path, wasCompressed, _ref;
+      if (compress == null) {
+        compress = this.compressionDefault;
+      }
       _ref = this.separateWithFilename(filename), path = _ref.path, name = _ref.name;
       fs = this._getFilesystemObject();
       folder = this.walkPath(fs, path);
@@ -387,9 +391,12 @@
         file = [this._nextAvailableFileNumber(), 0];
         former = null;
       }
+      wasCompressed = file[2];
+      file[2] = compress;
       this._writeFile(file, content);
       folder[name] = file;
       if (!this._setFilesystemObject(fs)) {
+        file[2] = wasCompressed;
         if (former) {
           this._writeFile(file, former);
         } else {
@@ -415,8 +422,11 @@
       return (file != null ? file[1] : void 0) || -1;
     };
 
-    _Class.prototype.append = function(filename, content) {
-      var file, folder, former, fs, name, path, _ref;
+    _Class.prototype.append = function(filename, content, compress) {
+      var file, folder, former, fs, name, path, wasCompressed, _ref;
+      if (compress == null) {
+        compress = this.compressionDefault;
+      }
       if (typeof content !== 'string') {
         throw Error('Can only append strings to a file');
       }
@@ -440,9 +450,12 @@
         file = [this._nextAvailableFileNumber(), 0];
         former = null;
       }
+      wasCompressed = file[2];
+      file[2] = compress;
       this._writeFile(file, content);
       folder[name] = file;
       if (!this._setFilesystemObject(fs)) {
+        file[2] = wasCompressed;
         if (former) {
           this._writeFile(file, former);
         } else {
