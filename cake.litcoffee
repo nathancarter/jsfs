@@ -12,6 +12,34 @@ what each of those individual tasks means.
         taskQueue.push 'test'
         next()
 
+Also, the following utility function is handy for executing a
+sequence of shell commands, and ensuring each succeeds before
+proceeding on to the next.  It will be used in some tasks below.
+
+Provide it data as a list of object, each with these attributes.
+ * `command :` required attribute, string, shell command to run
+ * `cwd :` optional attribute, defaults to `'.'`, current working
+   directory in which to run the command
+ * `description :` optional attribute, defaults to `command`, the
+   text that will be printed to the console when the command is
+   started
+
+
+    colors = require 'colors'
+    { exec } = require 'child_process'
+    runShellCommands = ( commandData, callback = -> ) ->
+        if commandData.length is 0 then return callback()
+        nextCommand = commandData.shift()
+        if not nextCommand.command
+            throw Error 'Missing command field in command datum'
+        console.log nextCommand.description or nextCommand.command
+        exec nextCommand.command, { cwd : nextCommand.cwd or '.' },
+        ( err, stdout, stderr ) ->
+            if stdout + stderr
+                console.log stdout + stderr.red
+            throw err if err
+            runShellCommands commandData, callback
+
 # The main build process
 
 A Cakefile should define the tasks it can perform.  This one can
@@ -44,43 +72,32 @@ This project is built from one source file, `jsfs.litcoffee`.
 The main step of the build process is to compile that file into
 JavaScript and minify it (with source maps).  We do so now.
 
-The first step is to call the CoffeeScript compiler.
+We utilize the `runShellCommands` utility here to run a sequence
+of shell commands in the current directory.  We compile the
+`.litcoffee` source and minify it (creating source maps in both
+steps) and then move the files into the `release/` folder.
 
-        colors = require 'colors'
-        { exec } = require 'child_process'
-        console.log 'Compiling jsfs.litcoffee...'
-        exec 'coffee --map --compile jsfs.litcoffee',
-        { cwd : '.' }, ( err, stdout, stderr ) ->
-            if stdout + stderr
-                console.log stdout + stderr.red
-            throw err if err
-
-The next step is to call UglifyJS.
-
-            console.log 'Minifying jsfs.js...'
-            exec './node_modules/uglify-js/bin/uglifyjs
-                -c -m -v false --in-source-map jsfs.map
-                -o jsfs.min.js --source-map jsfs.min.js.map',
-            { cwd : '.' }, ( err, stdout, stderr ) ->
-                if stdout + stderr
-                    console.log stdout + stderr.red
-                throw err if err
-
-Move the compiled files into the release folder.
-
-                console.log 'Moving files to release/...'
-                exec 'mv jsfs.js jsfs.map jsfs.min.js
-                    jsfs.min.js.map release/',
-                { cwd : '.' }, ( err, stdout, stderr ) ->
-                    if stdout + stderr
-                        console.log stdout + stderr.red
-                    throw err if err
-
-That's the job!
-
-                    console.log 'Done compiling and minifying
-                        source into release folder.'.green
-                    next()
+        runShellCommands [
+            {
+                description : 'Compiling jsfs.litcoffee...'
+                command : 'coffee --map --compile jsfs.litcoffee'
+            }
+            {
+                description : 'Minifying jsfs.js...'
+                command : './node_modules/uglify-js/bin/uglifyjs
+                           -c -m -v false --in-source-map jsfs.map
+                           -o jsfs.min.js --source-map
+                           jsfs.min.js.map'
+            }
+            {
+                description : 'Moving files to release/...'
+                command : 'mv jsfs.js jsfs.map jsfs.min.js
+                           jsfs.min.js.map release/'
+            }
+        ], ->
+            console.log 'Done compiling and minifying
+                source into release folder.'.green
+            next()
 
 # Testing
 
@@ -90,7 +107,6 @@ page (in `tests/index.html`) is up-to-date.
 
     task 'test', 'Compile tests/*.litcoffee test specs', ->
         colors = require 'colors'
-        { exec } = require 'child_process'
         fs = require 'fs'
         html = ( fs.readFileSync 'tests/index.html' ).toString()
 
@@ -102,15 +118,15 @@ the CoffeeScript compiler on each.
         count = 0
         for file in toBuild
             do ( file ) ->
-                console.log "Compiling tests/#{file}..."
-                exec "coffee --compile #{file}", { cwd : 'tests' },
-                ( err, stdout, stderr ) ->
-                    if stdout + stderr
-                        console.log stdout + stderr.red
-                    throw err if err
+                runShellCommands [
+                    {
+                        description : "Compiling tests/#{file}..."
+                        command : "coffee --compile #{file}"
+                        cwd : 'tests'
+                    }
+                ], ->
                     file = file[..-11] + '.js'
-                    console.log "Done building
-                        tests/#{file}."
+                    console.log "Done building tests/#{file}."
 
 Also check to see if the file we just compiled is mentioned in the
 unit testing HTML file.  If not, issue a warning that there is a
@@ -119,7 +135,11 @@ compiled test spec that's unused.
                     if -1 is html.indexOf file
                         console.log "Warning: Compiled file
                             #{file} is not mentioned in
-                            #tests/index.html!".red
+                            tests/index.html!".red
+
+When the final parallel build of test specs completes, announce
+successful completion.
+
                     if ++count is toBuild.length
                         console.log 'All test specs built.  Open
                             tests/index.html to run them and see
