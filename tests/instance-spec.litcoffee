@@ -32,12 +32,6 @@ Here is the cleaning function.
                 for i in [0...10]
                     localStorage.removeItem "#{name}_file_#{i}"
 
-And the final line of the cleaning function is completely dangerous to use
-if any `FileSystem` objects exist!  But we will only be using it between
-tests, where we will not be retaining any such objects.
-
-            window.FileSystem::_cache = { }
-
 We install it as both setup and cleanup for each test run below.
 
         beforeEach completeClear
