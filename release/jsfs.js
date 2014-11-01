@@ -41,12 +41,26 @@
     };
 
     _Class.prototype._readFile = function(farray) {
-      return JSON.parse(localStorage.getItem(this._fileName(farray[0])));
+      var result;
+      result = JSON.parse(localStorage.getItem(this._fileName(farray[0])));
+      if (farray[2]) {
+        if (!LZString) {
+          throw Error('Cannot decompress file; LZString undefined');
+        }
+        result = LZString.decompress(result);
+      }
+      return result;
     };
 
     _Class.prototype._writeFile = function(farray, content) {
       var data;
       data = JSON.stringify(content);
+      if (farray[2]) {
+        if (!LZString) {
+          throw Error('Cannot compress file; LZString undefined');
+        }
+        data = LZString.compress(data);
+      }
       localStorage.setItem(this._fileName(farray[0]), data);
       return farray[1] = data.length;
     };

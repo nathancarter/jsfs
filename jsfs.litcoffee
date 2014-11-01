@@ -47,10 +47,24 @@ write method returns undefined on success and throws an error on failure.
 On success, it modifies the size entry of the given file array.  It takes an
 object as parameter and serializes it for you.
 
+Both apply compression/decompression using
+[lz-string](http://pieroxy.net/blog/pages/lz-string/index.html) if and only
+if the `LZString` object is defined.  If it is not defined, but the file
+array requires using it, an error is thrown.
+
         _readFile : ( farray ) ->
-            JSON.parse localStorage.getItem @_fileName farray[0]
+            result = JSON.parse localStorage.getItem @_fileName farray[0]
+            if farray[2]
+                if not LZString
+                    throw Error 'Cannot decompress file; LZString undefined'
+                result = LZString.decompress result
+            result
         _writeFile : ( farray, content ) ->
             data = JSON.stringify content
+            if farray[2]
+                if not LZString
+                    throw Error 'Cannot compress file; LZString undefined'
+                data = LZString.compress data
             localStorage.setItem @_fileName( farray[0] ), data
             farray[1] = data.length
 
