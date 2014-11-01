@@ -36,6 +36,24 @@ for storage space reasons.
             catch e
                 no
 
+Now we create similar methods for reading and writing a file to storage,
+based on its number.  (These are *not* public APIs, which will be based on
+paths; these are internal APIs which assume that the path has been
+traversed, and the number for the file found within the filesystem object.)
+The write method returns the size of the data written.
+
+        _readFile : ( number ) ->
+            JSON.parse localStorage.getItem @_fileName number
+        _writeFile : ( number, content ) ->
+            data = JSON.stringify content
+            localStorage.setItem @_fileName( number ), data
+            data.length
+
+We also need a method for removing a file.
+
+        _removeFile : ( number ) ->
+            localStorage.removeItem @_fileName number
+
 ## Constructor
 
 The constructor allows you to pass a name, which will be used like a
@@ -400,28 +418,27 @@ if there is none.
             else
                 number = @_nextAvailableFileNumber()
 
-Serialize the data and write it into LocalStorage, updating the size
-information stored in the filesystem.
+Read the old contents of the file, in case later writing fails and we must
+undo this.  Then write the new contents to the file and store the new file
+size in the filesystem.
 
-            data = JSON.stringify content
-            fname = @_fileName number
-            former = localStorage.getItem fname
-            localStorage.setItem fname, data
-            folder[name] = [ number, data.length ]
+            former = @_readFile number
+            size = @_writeFile number, content
+            folder[name] = [ number, size ]
 
 Try to save the new filesystem into LocalStorage.  If this fails, put the
 file back the way it was and return a false value to indicate failure.
 
             if not @_setFilesystemObject fs
                 if former
-                    localStorage.setItem fname, former
+                    @_writeFile number, former
                 else
-                    localStorage.removeItem fname
+                    @_removeFile number
                 return no
 
 Everything succeeded, so return the size of the new file.
 
-            data.length
+            size
 
 ### read
 
@@ -431,21 +448,15 @@ JavaScript example:
  * `var restoredObject = F.read( 'file.out' )` (no need to do any
    `JSON.parse` yourself)
 
-It is assumed that the string in the file is the result of an application of
-`JSON.stringify`, and thus `JSON.parse` is applied to it and the result
-returned.
+This function simply wraps the internal API for reading a file based on its
+number with some tools that turn a filename into a file number, by looking
+it up in the filesystem object.
 
         read : ( filename ) ->
-
-Find the file.
-
             file = @walkPathAndFile @_getFilesystemObject(),
                 @separate filename
             if not file then throw Error 'No such file'
-
-Read the file's content, decode it, and return it.
-
-            JSON.parse localStorage.getItem @_fileName file[0]
+            @_readFile file[0]
 
 ### size
 
@@ -505,36 +516,33 @@ string, and if so, glue them onto the content passed as parameter.
                 if folder[name] not instanceof Array
                     throw Error 'Cannot append to a folder'
                 number = folder[name][0]
-                existingContent = JSON.parse localStorage.getItem \
-                    @_fileName folder[name][0]
-                if typeof existingContent isnt 'string'
+                former = @_readFile number
+                if typeof former isnt 'string'
                     throw Error 'Cannot append to a file
                         unless it contains a string'
-                content = existingContent + content
+                content = former + content
             else
                 number = @_nextAvailableFileNumber()
 
 Serialize and write it into LocalStorage, just as we did in `write`.
 
-            data = JSON.stringify content
-            fname = @_fileName number
-            former = localStorage.getItem fname
-            localStorage.setItem fname, data
-            folder[name] = [ number, data.length ]
+            former ?= @_readFile number
+            size = @_writeFile number, content
+            folder[name] = [ number, size ]
 
 Try to save the new filesystem into LocalStorage.  If this fails, put the
 file back the way it was and return a false value to indicate failure.
 
             if not @_setFilesystemObject fs
                 if former
-                    localStorage.setItem fname, former
+                    @_writeFile number, former
                 else
-                    localStorage.removeItem fname
+                    @_removeFile number
                 return no
 
 Everything succeeded, so return the size of the new file.
 
-            data.length
+            size
 
 ## Moving and removing files and folders
 
@@ -590,8 +598,7 @@ Otherwise, recur on all its children and concatenate the results.
 So now we leverage that routine to get a list of all the files we need to
 delete.
 
-            for file in filesBeneath folder[name]
-                localStorage.removeItem @_fileName file[0]
+            @_removeFile file[0] for file in filesBeneath folder[name]
 
 Now that all the files have been deleted, we delete the folder in the
 filesystem, and save the filesystem object, and return success.  (The only
@@ -647,18 +654,17 @@ So we now know we must copy the data in `file` to the new folder
 copy, and try to write it into a new file.  If that fails, there is not
 enough space to do the copy, and we return false.
 
-            data = localStorage.getItem @_fileName file[0]
-            num = @_nextAvailableFileNumber()
-            key = @_fileName num
-            try localStorage.setItem key, data catch e then return no
+            data = @_readFile file[0]
+            number = @_nextAvailableFileNumber()
+            try size = @_writeFile number, data catch e then return no
 
 Copying the file's data succeeded, so we try to update the filesystem
 hierarchy to reflect the change.  If this fails, then we also revert the
 file writing we just did, so that everything remains consistent.
 
-            destFolder[name] = [ num, data.length ]
+            destFolder[name] = [ number, size ]
             if not @_setFilesystemObject fs
-                localStorage.removeItem key
+                @_removeFile number
                 return no
             yes
 
@@ -714,4 +720,3 @@ this is only a move within the hierarchy.
 The essentials of this project are complete, but I do aim to one day
 extend this code with support for data compression.
 See [the to-do list for this project](TODO.md).
-

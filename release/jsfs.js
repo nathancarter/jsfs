@@ -40,6 +40,21 @@
       }
     };
 
+    _Class.prototype._readFile = function(number) {
+      return JSON.parse(localStorage.getItem(this._fileName(number)));
+    };
+
+    _Class.prototype._writeFile = function(number, content) {
+      var data;
+      data = JSON.stringify(content);
+      localStorage.setItem(this._fileName(number), data);
+      return data.length;
+    };
+
+    _Class.prototype._removeFile = function(number) {
+      return localStorage.removeItem(this._fileName(number));
+    };
+
     function _Class(name) {
       this.rm = __bind(this.rm, this);
       this.type = __bind(this.type, this);
@@ -341,7 +356,7 @@
     };
 
     _Class.prototype.write = function(filename, content) {
-      var data, fname, folder, former, fs, name, number, path, _ref;
+      var folder, former, fs, name, number, path, size, _ref;
       _ref = this.separateWithFilename(filename), path = _ref.path, name = _ref.name;
       fs = this._getFilesystemObject();
       folder = this.walkPath(fs, path);
@@ -356,20 +371,18 @@
       } else {
         number = this._nextAvailableFileNumber();
       }
-      data = JSON.stringify(content);
-      fname = this._fileName(number);
-      former = localStorage.getItem(fname);
-      localStorage.setItem(fname, data);
-      folder[name] = [number, data.length];
+      former = this._readFile(number);
+      size = this._writeFile(number, content);
+      folder[name] = [number, size];
       if (!this._setFilesystemObject(fs)) {
         if (former) {
-          localStorage.setItem(fname, former);
+          this._writeFile(number, former);
         } else {
-          localStorage.removeItem(fname);
+          this._removeFile(number);
         }
         return false;
       }
-      return data.length;
+      return size;
     };
 
     _Class.prototype.read = function(filename) {
@@ -378,7 +391,7 @@
       if (!file) {
         throw Error('No such file');
       }
-      return JSON.parse(localStorage.getItem(this._fileName(file[0])));
+      return this._readFile(file[0]);
     };
 
     _Class.prototype.size = function(filename) {
@@ -388,7 +401,7 @@
     };
 
     _Class.prototype.append = function(filename, content) {
-      var data, existingContent, fname, folder, former, fs, name, number, path, _ref;
+      var folder, former, fs, name, number, path, size, _ref;
       if (typeof content !== 'string') {
         throw Error('Can only append strings to a file');
       }
@@ -403,28 +416,28 @@
           throw Error('Cannot append to a folder');
         }
         number = folder[name][0];
-        existingContent = JSON.parse(localStorage.getItem(this._fileName(folder[name][0])));
-        if (typeof existingContent !== 'string') {
+        former = this._readFile(number);
+        if (typeof former !== 'string') {
           throw Error('Cannot append to a file unless it contains a string');
         }
-        content = existingContent + content;
+        content = former + content;
       } else {
         number = this._nextAvailableFileNumber();
       }
-      data = JSON.stringify(content);
-      fname = this._fileName(number);
-      former = localStorage.getItem(fname);
-      localStorage.setItem(fname, data);
-      folder[name] = [number, data.length];
+      if (former == null) {
+        former = this._readFile(number);
+      }
+      size = this._writeFile(number, content);
+      folder[name] = [number, size];
       if (!this._setFilesystemObject(fs)) {
         if (former) {
-          localStorage.setItem(fname, former);
+          this._writeFile(number, former);
         } else {
-          localStorage.removeItem(fname);
+          this._removeFile(number);
         }
         return false;
       }
-      return data.length;
+      return size;
     };
 
     _Class.prototype.rm = function(path) {
@@ -456,7 +469,7 @@
       _ref1 = filesBeneath(folder[name]);
       for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
         file = _ref1[_i];
-        localStorage.removeItem(this._fileName(file[0]));
+        this._removeFile(file[0]);
       }
       delete folder[name];
       this._setFilesystemObject(fs);
@@ -464,7 +477,7 @@
     };
 
     _Class.prototype.cp = function(source, dest) {
-      var data, destFolder, destName, e, file, fs, key, name, num, path, sourcePath, _ref;
+      var data, destFolder, destName, e, file, fs, name, number, path, size, sourcePath, _ref;
       fs = this._getFilesystemObject();
       sourcePath = this.separate(source);
       file = this.walkPathAndFile(fs, sourcePath);
@@ -488,18 +501,17 @@
           return;
         }
       }
-      data = localStorage.getItem(this._fileName(file[0]));
-      num = this._nextAvailableFileNumber();
-      key = this._fileName(num);
+      data = this._readFile(file[0]);
+      number = this._nextAvailableFileNumber();
       try {
-        localStorage.setItem(key, data);
+        size = this._writeFile(number, data);
       } catch (_error) {
         e = _error;
         return false;
       }
-      destFolder[name] = [num, data.length];
+      destFolder[name] = [number, size];
       if (!this._setFilesystemObject(fs)) {
-        localStorage.removeItem(key);
+        this._removeFile(number);
         return false;
       }
       return true;
