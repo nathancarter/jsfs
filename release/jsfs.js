@@ -42,14 +42,14 @@
 
     _Class.prototype._readFile = function(farray) {
       var result;
-      result = JSON.parse(localStorage.getItem(this._fileName(farray[0])));
+      result = localStorage.getItem(this._fileName(farray[0]));
       if (farray[2]) {
         if (!LZString) {
           throw Error('Cannot decompress file; LZString undefined');
         }
         result = LZString.decompress(result);
       }
-      return result;
+      return JSON.parse(result);
     };
 
     _Class.prototype._writeFile = function(farray, content) {

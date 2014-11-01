@@ -53,12 +53,12 @@ if the `LZString` object is defined.  If it is not defined, but the file
 array requires using it, an error is thrown.
 
         _readFile : ( farray ) ->
-            result = JSON.parse localStorage.getItem @_fileName farray[0]
+            result = localStorage.getItem @_fileName farray[0]
             if farray[2]
                 if not LZString
                     throw Error 'Cannot decompress file; LZString undefined'
                 result = LZString.decompress result
-            result
+            JSON.parse result
         _writeFile : ( farray, content ) ->
             data = JSON.stringify content
             if farray[2]
