@@ -3,9 +3,6 @@
 
 ## Adding optional compression
 
- * Import something like
-   [lz-string](http://pieroxy.net/blog/pages/lz-string/index.html)
-   to do compression of JavaScript strings.
  * Add a third entry to each file in the filesystem object, a
    bool indicating whether the file is compressed or not.  There
    need be no public API for accessing it; it will only be used
