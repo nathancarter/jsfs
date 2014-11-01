@@ -40,19 +40,19 @@
       }
     };
 
-    _Class.prototype._readFile = function(number) {
-      return JSON.parse(localStorage.getItem(this._fileName(number)));
+    _Class.prototype._readFile = function(farray) {
+      return JSON.parse(localStorage.getItem(this._fileName(farray[0])));
     };
 
-    _Class.prototype._writeFile = function(number, content) {
+    _Class.prototype._writeFile = function(farray, content) {
       var data;
       data = JSON.stringify(content);
-      localStorage.setItem(this._fileName(number), data);
-      return data.length;
+      localStorage.setItem(this._fileName(farray[0]), data);
+      return farray[1] = data.length;
     };
 
-    _Class.prototype._removeFile = function(number) {
-      return localStorage.removeItem(this._fileName(number));
+    _Class.prototype._removeFile = function(farray) {
+      return localStorage.removeItem(this._fileName(farray[0]));
     };
 
     function _Class(name) {
@@ -356,7 +356,7 @@
     };
 
     _Class.prototype.write = function(filename, content) {
-      var folder, former, fs, name, number, path, size, _ref;
+      var file, folder, former, fs, name, path, _ref;
       _ref = this.separateWithFilename(filename), path = _ref.path, name = _ref.name;
       fs = this._getFilesystemObject();
       folder = this.walkPath(fs, path);
@@ -367,22 +367,23 @@
         if (!(folder[name] instanceof Array)) {
           throw Error('Cannot write to a folder');
         }
-        number = folder[name][0];
+        file = folder[name];
+        former = this._readFile(file);
       } else {
-        number = this._nextAvailableFileNumber();
+        file = [this._nextAvailableFileNumber(), 0];
+        former = null;
       }
-      former = this._readFile(number);
-      size = this._writeFile(number, content);
-      folder[name] = [number, size];
+      this._writeFile(file, content);
+      folder[name] = file;
       if (!this._setFilesystemObject(fs)) {
         if (former) {
-          this._writeFile(number, former);
+          this._writeFile(file, former);
         } else {
-          this._removeFile(number);
+          this._removeFile(file);
         }
         return false;
       }
-      return size;
+      return file[1];
     };
 
     _Class.prototype.read = function(filename) {
@@ -391,7 +392,7 @@
       if (!file) {
         throw Error('No such file');
       }
-      return this._readFile(file[0]);
+      return this._readFile(file);
     };
 
     _Class.prototype.size = function(filename) {
@@ -401,7 +402,7 @@
     };
 
     _Class.prototype.append = function(filename, content) {
-      var folder, former, fs, name, number, path, size, _ref;
+      var file, folder, former, fs, name, path, _ref;
       if (typeof content !== 'string') {
         throw Error('Can only append strings to a file');
       }
@@ -415,29 +416,27 @@
         if (!(folder[name] instanceof Array)) {
           throw Error('Cannot append to a folder');
         }
-        number = folder[name][0];
-        former = this._readFile(number);
+        file = folder[name];
+        former = this._readFile(file);
         if (typeof former !== 'string') {
           throw Error('Cannot append to a file unless it contains a string');
         }
         content = former + content;
       } else {
-        number = this._nextAvailableFileNumber();
+        file = [this._nextAvailableFileNumber(), 0];
+        former = null;
       }
-      if (former == null) {
-        former = this._readFile(number);
-      }
-      size = this._writeFile(number, content);
-      folder[name] = [number, size];
+      this._writeFile(file, content);
+      folder[name] = file;
       if (!this._setFilesystemObject(fs)) {
         if (former) {
-          this._writeFile(number, former);
+          this._writeFile(file, former);
         } else {
-          this._removeFile(number);
+          this._removeFile(file);
         }
         return false;
       }
-      return size;
+      return file[1];
     };
 
     _Class.prototype.rm = function(path) {
@@ -469,7 +468,7 @@
       _ref1 = filesBeneath(folder[name]);
       for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
         file = _ref1[_i];
-        this._removeFile(file[0]);
+        this._removeFile(file);
       }
       delete folder[name];
       this._setFilesystemObject(fs);
@@ -477,7 +476,7 @@
     };
 
     _Class.prototype.cp = function(source, dest) {
-      var data, destFolder, destName, e, file, fs, name, number, path, size, sourcePath, _ref;
+      var data, destFolder, destName, e, file, fs, name, newfile, path, sourcePath, _ref;
       fs = this._getFilesystemObject();
       sourcePath = this.separate(source);
       file = this.walkPathAndFile(fs, sourcePath);
@@ -501,17 +500,17 @@
           return;
         }
       }
-      data = this._readFile(file[0]);
-      number = this._nextAvailableFileNumber();
+      data = this._readFile(file);
+      newfile = [this._nextAvailableFileNumber(), 0];
       try {
-        size = this._writeFile(number, data);
+        this._writeFile(newfile, data);
       } catch (_error) {
         e = _error;
         return false;
       }
-      destFolder[name] = [number, size];
+      destFolder[name] = newfile;
       if (!this._setFilesystemObject(fs)) {
-        this._removeFile(number);
+        this._removeFile(newfile);
         return false;
       }
       return true;

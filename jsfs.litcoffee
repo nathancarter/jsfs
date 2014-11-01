@@ -37,22 +37,27 @@ for storage space reasons.
                 no
 
 Now we create similar methods for reading and writing a file to storage,
-based on its number.  (These are *not* public APIs, which will be based on
-paths; these are internal APIs which assume that the path has been
-traversed, and the number for the file found within the filesystem object.)
-The write method returns the size of the data written.
+based on its file data array, as stored in the filesystem.  (These are *not*
+public APIs, which will be based on paths; these are internal APIs which
+assume that the path has been traversed, and the array data for the file
+found within the filesystem object.)
 
-        _readFile : ( number ) ->
-            JSON.parse localStorage.getItem @_fileName number
-        _writeFile : ( number, content ) ->
+The read method returns the object serialized from the string read.  The
+write method returns undefined on success and throws an error on failure.
+On success, it modifies the size entry of the given file array.  It takes an
+object as parameter and serializes it for you.
+
+        _readFile : ( farray ) ->
+            JSON.parse localStorage.getItem @_fileName farray[0]
+        _writeFile : ( farray, content ) ->
             data = JSON.stringify content
-            localStorage.setItem @_fileName( number ), data
-            data.length
+            localStorage.setItem @_fileName( farray[0] ), data
+            farray[1] = data.length
 
 We also need a method for removing a file.
 
-        _removeFile : ( number ) ->
-            localStorage.removeItem @_fileName number
+        _removeFile : ( farray ) ->
+            localStorage.removeItem @_fileName farray[0]
 
 ## Constructor
 
@@ -409,36 +414,37 @@ created.
             if not folder then throw Error 'Invalid folder path'
 
 Find the index of the file to which we should write, or create a new index
-if there is none.
+if there is none. And read the old contents of the file, if any, in case
+later writing fails and we must undo this.
 
             if folder.hasOwnProperty name
                 if folder[name] not instanceof Array
                     throw Error 'Cannot write to a folder'
-                number = folder[name][0]
+                file = folder[name]
+                former = @_readFile file
             else
-                number = @_nextAvailableFileNumber()
+                file = [ @_nextAvailableFileNumber(), 0 ]
+                former = null
 
-Read the old contents of the file, in case later writing fails and we must
-undo this.  Then write the new contents to the file and store the new file
+Write the new contents to the file and store the new file
 size in the filesystem.
 
-            former = @_readFile number
-            size = @_writeFile number, content
-            folder[name] = [ number, size ]
+            @_writeFile file, content
+            folder[name] = file
 
 Try to save the new filesystem into LocalStorage.  If this fails, put the
 file back the way it was and return a false value to indicate failure.
 
             if not @_setFilesystemObject fs
                 if former
-                    @_writeFile number, former
+                    @_writeFile file, former
                 else
-                    @_removeFile number
+                    @_removeFile file
                 return no
 
 Everything succeeded, so return the size of the new file.
 
-            size
+            file[1]
 
 ### read
 
@@ -456,7 +462,7 @@ it up in the filesystem object.
             file = @walkPathAndFile @_getFilesystemObject(),
                 @separate filename
             if not file then throw Error 'No such file'
-            @_readFile file[0]
+            @_readFile file
 
 ### size
 
@@ -515,34 +521,34 @@ string, and if so, glue them onto the content passed as parameter.
             if folder.hasOwnProperty name
                 if folder[name] not instanceof Array
                     throw Error 'Cannot append to a folder'
-                number = folder[name][0]
-                former = @_readFile number
+                file = folder[name]
+                former = @_readFile file
                 if typeof former isnt 'string'
                     throw Error 'Cannot append to a file
                         unless it contains a string'
                 content = former + content
             else
-                number = @_nextAvailableFileNumber()
+                file = [ @_nextAvailableFileNumber(), 0 ]
+                former = null
 
 Serialize and write it into LocalStorage, just as we did in `write`.
 
-            former ?= @_readFile number
-            size = @_writeFile number, content
-            folder[name] = [ number, size ]
+            @_writeFile file, content
+            folder[name] = file
 
 Try to save the new filesystem into LocalStorage.  If this fails, put the
 file back the way it was and return a false value to indicate failure.
 
             if not @_setFilesystemObject fs
                 if former
-                    @_writeFile number, former
+                    @_writeFile file, former
                 else
-                    @_removeFile number
+                    @_removeFile file
                 return no
 
 Everything succeeded, so return the size of the new file.
 
-            size
+            file[1]
 
 ## Moving and removing files and folders
 
@@ -598,7 +604,7 @@ Otherwise, recur on all its children and concatenate the results.
 So now we leverage that routine to get a list of all the files we need to
 delete.
 
-            @_removeFile file[0] for file in filesBeneath folder[name]
+            @_removeFile file for file in filesBeneath folder[name]
 
 Now that all the files have been deleted, we delete the folder in the
 filesystem, and save the filesystem object, and return success.  (The only
@@ -654,17 +660,20 @@ So we now know we must copy the data in `file` to the new folder
 copy, and try to write it into a new file.  If that fails, there is not
 enough space to do the copy, and we return false.
 
-            data = @_readFile file[0]
-            number = @_nextAvailableFileNumber()
-            try size = @_writeFile number, data catch e then return no
+            data = @_readFile file
+            newfile = [ @_nextAvailableFileNumber(), 0 ]
+            try
+                @_writeFile newfile, data
+            catch e
+                return no
 
 Copying the file's data succeeded, so we try to update the filesystem
 hierarchy to reflect the change.  If this fails, then we also revert the
 file writing we just did, so that everything remains consistent.
 
-            destFolder[name] = [ number, size ]
+            destFolder[name] = newfile
             if not @_setFilesystemObject fs
-                @_removeFile number
+                @_removeFile newfile
                 return no
             yes
 
