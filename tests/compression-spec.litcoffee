@@ -148,7 +148,7 @@ Then restore the original compress and decompress for use in later testing.
 
 ## Compression makes files smaller
 
-        it 'make compressed files smaller', ->
+        it 'make compressed files smaller than uncompressed ones', ->
 
 We create here a few objects that we will write to storage, and the
 filesystem in which to store them.
@@ -193,4 +193,43 @@ smaller than the original.
 
 ## Compressed files can still be read accurately
 
-Tests still to be written
+        it 'can reread compressed data written to storage', ->
+
+We create here a few objects that we will write to storage, and the
+filesystem in which to store them.  These are the same objects used in the
+previous test.
+
+            objectsToWrite = [
+                {
+                    key1 : [ 1, 2, 3, 7, 8, 9 ]
+                    key2 : "this is string content"
+                    key3 : { hamster : no }
+                }
+                "Four score and seven years ago, our forefathers brought
+                forth on this continent a new nation, conceived in liberty,
+                and dedicated to the proposition that all men are created
+                equal."
+                [ [ ], [ "" ], [ " ", [ " " ] ], { }, { } ]
+            ]
+            F = new window.FileSystem 'example'
+
+Write each file to disk compressed and get its size.  Verify that it is
+greater than zero.
+
+            expect( F.write 'object0.zip', objectsToWrite[0], yes )
+                .toBeGreaterThan 0
+            expect( F.write 'object1.zip', objectsToWrite[1], yes )
+                .toBeGreaterThan 0
+            expect( F.write 'object2.zip', objectsToWrite[2], yes )
+                .toBeGreaterThan 0
+
+Reread each file from disk and verify that it deserialized into an object
+equivalent to the original stored object.
+
+            expect( F.read 'object0.zip' ).toEqual objectsToWrite[0]
+            expect( F.read 'object1.zip' ).toEqual objectsToWrite[1]
+            expect( F.read 'object2.zip' ).toEqual objectsToWrite[2]
+
+## Respects the compression default stored in the instance
+
+Test not yet written
