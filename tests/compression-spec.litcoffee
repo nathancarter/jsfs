@@ -148,6 +148,49 @@ Then restore the original compress and decompress for use in later testing.
 
 ## Compression makes files smaller
 
-Tests still to be written
+        it 'make compressed files smaller', ->
+
+We create here a few objects that we will write to storage, and the
+filesystem in which to store them.
+
+            objectsToWrite = [
+                {
+                    key1 : [ 1, 2, 3, 7, 8, 9 ]
+                    key2 : "this is string content"
+                    key3 : { hamster : no }
+                }
+                "Four score and seven years ago, our forefathers brought
+                forth on this continent a new nation, conceived in liberty,
+                and dedicated to the proposition that all men are created
+                equal."
+                [ [ ], [ "" ], [ " ", [ " " ] ], { }, { } ]
+            ]
+            F = new window.FileSystem 'example'
+
+Write each file to disk uncompressed and get its size.  Verify that it is
+positive.
+
+            sizesUncompressed = [
+                F.write 'object0.dat', objectsToWrite[0], no
+                F.write 'object1.dat', objectsToWrite[1], no
+                F.write 'object2.dat', objectsToWrite[2], no
+            ]
+            expect( sizesUncompressed[0] ).toBeGreaterThan 0
+            expect( sizesUncompressed[1] ).toBeGreaterThan 0
+            expect( sizesUncompressed[2] ).toBeGreaterThan 0
+
+Write each file to disk compressed and get its size.  Verify that it is
+smaller than the original.
+
+            sizesCompressed = [
+                F.write 'object0.zip', objectsToWrite[0], yes
+                F.write 'object1.zip', objectsToWrite[1], yes
+                F.write 'object2.zip', objectsToWrite[2], yes
+            ]
+            expect( sizesCompressed[0] ).toBeLessThan sizesUncompressed[0]
+            expect( sizesCompressed[1] ).toBeLessThan sizesUncompressed[1]
+            expect( sizesCompressed[2] ).toBeLessThan sizesUncompressed[2]
 
 ## Compressed files can still be read accurately
+
+Tests still to be written
