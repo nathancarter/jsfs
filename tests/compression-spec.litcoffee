@@ -232,4 +232,67 @@ equivalent to the original stored object.
 
 ## Respects the compression default stored in the instance
 
-Test not yet written
+        it 'respect the compression default in the FileSystem instance', ->
+
+Create the same objects used in the last two tests, and a `FileSystem`
+instance.
+
+            objectsToWrite = [
+                {
+                    key1 : [ 1, 2, 3, 7, 8, 9 ]
+                    key2 : "this is string content"
+                    key3 : { hamster : no }
+                }
+                "Four score and seven years ago, our forefathers brought
+                forth on this continent a new nation, conceived in liberty,
+                and dedicated to the proposition that all men are created
+                equal."
+                [ [ ], [ "" ], [ " ", [ " " ] ], { }, { } ]
+            ]
+            F = new window.FileSystem 'example'
+
+Write the objects to disk three times, once with the default not set to any
+value (to test that it is initially set to uncompressed), once with the
+default explicitly set to uncompressed writing, writing, and once with it
+set to compressed writing.
+
+            expect( F.write 'object0a.dat', objectsToWrite[0] )
+                .toBeGreaterThan 0
+            expect( F.write 'object1a.dat', objectsToWrite[1] )
+                .toBeGreaterThan 0
+            expect( F.write 'object2a.dat', objectsToWrite[2] )
+                .toBeGreaterThan 0
+            F.compressionDefault = no
+            expect( F.write 'object0b.dat', objectsToWrite[0] )
+                .toBeGreaterThan 0
+            expect( F.write 'object1b.dat', objectsToWrite[1] )
+                .toBeGreaterThan 0
+            expect( F.write 'object2b.dat', objectsToWrite[2] )
+                .toBeGreaterThan 0
+            F.compressionDefault = yes
+            expect( F.write 'object0c.dat', objectsToWrite[0] )
+                .toBeGreaterThan 0
+            expect( F.write 'object1c.dat', objectsToWrite[1] )
+                .toBeGreaterThan 0
+            expect( F.write 'object2c.dat', objectsToWrite[2] )
+                .toBeGreaterThan 0
+
+Verify that the sizes of the "a" and "b" files are the same, demonstrating
+that they were either both compressed or both uncompressed. (We verify below
+that they were the uncompressed versions.)
+
+            expect( F.size 'object0a.dat' ).toBe F.size 'object0b.dat'
+            expect( F.size 'object1a.dat' ).toBe F.size 'object1b.dat'
+            expect( F.size 'object2a.dat' ).toBe F.size 'object2b.dat'
+
+Verify that the "a" files are larger than the "c" files, demonstrating that
+the "c" files must be the compressed ones, while the "a" files are
+uncompressed.  (Because the "a" and "b" files are the same sizes, this also
+means that "b" files are uncompressed.)
+
+            expect( F.size 'object0a.dat' )
+                .toBeGreaterThan F.size 'object0c.dat'
+            expect( F.size 'object1a.dat' )
+                .toBeGreaterThan F.size 'object1c.dat'
+            expect( F.size 'object2a.dat' )
+                .toBeGreaterThan F.size 'object2c.dat'
