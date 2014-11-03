@@ -22,14 +22,14 @@ in setup/cleanup functions.
             'example'
             'other'
         ]
-        maxNumFilesCreatedInEach = 10
+        maxNumFilesCreatedInEach = 30
 
 Here is the cleaning function.
 
         completeClear = ->
             for name in allNamesUsed
                 localStorage.removeItem "#{name}_filesystem"
-                for i in [0...10]
+                for i in [0...maxNumFilesCreatedInEach]
                     localStorage.removeItem "#{name}_file_#{i}"
 
 We install it as both setup and cleanup for each test run below.
