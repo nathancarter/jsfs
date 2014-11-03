@@ -80,18 +80,19 @@ steps) and then move the files into the `release/` folder.
         runShellCommands [
             {
                 description : 'Compiling jsfs.litcoffee...'
-                command : 'coffee --map --compile jsfs.litcoffee'
+                command : './node_modules/.bin/coffee
+                           --map --compile jsfs.litcoffee'
             }
             {
                 description : 'Minifying jsfs.js...'
-                command : './node_modules/uglify-js/bin/uglifyjs
-                           -c -m -v false --in-source-map jsfs.map
+                command : './node_modules/.bin/uglifyjs
+                           -c -m -v false --in-source-map jsfs.js.map
                            -o jsfs.min.js --source-map
                            jsfs.min.js.map'
             }
             {
                 description : 'Moving files to release/...'
-                command : 'mv jsfs.js jsfs.map jsfs.min.js
+                command : 'mv jsfs.js jsfs.js.map jsfs.min.js
                            jsfs.min.js.map release/'
             }
         ], ->
@@ -145,4 +146,3 @@ successful completion.
                             tests/index.html to run them and see
                             the results.'.green
                         next()
-
