@@ -419,6 +419,18 @@ JavaScript examples:
  * `F.write( 'myfile.txt', 'some string content' )`
  * `F.write( 'folder/file.dat', myJavaScriptObject )`
 
+Note that an optional third parameter says whether or not to compress the
+data.  The corresponding `read` function knows whether or not the data was
+compressed on write, and is smart enough to apply decompression if and only
+if needed.  Naturally, compressed files are smaller, but it takes longer to
+write them, since the compression algorithm must be applied.  For small
+files, this difference should be negligible.
+ * `F.write( 'myfile.zip', 'some string content', true );`
+
+The default for writing is uncompressed, but you can change that default by
+setting `F.compressionDefault = true;`.  In that case, you can write
+uncompressed files by passing `false` as the optional third argument.
+
 The file content can be any JavaScript object to which `JSON.stringify` can
 be applied.
 
@@ -522,6 +534,9 @@ requires that the content to append be a string, and the content of the file
 also be a string.  If either of these is not so, an error will be thrown.
 JavaScript example:
  * `F.append( 'logs/errors.log', 'An error occurred' );`
+
+The optional third parameter to `append` is the same as that to `write`,
+above.  [See there](#write) for more information.
 
 Much of the code below is like that of `write`, above.  So the comments here
 are less than they were above.

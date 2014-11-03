@@ -71,12 +71,15 @@ is written in a literate language, so it's documentation, too.
  * [rm](jsfs.litcoffee#rm)
  * [mkdir](jsfs.litcoffee#mkdir)
  * [constructor](jsfs.litcoffee#constructor)
+You can turn on and off data compression with an optional third parameter to
+the `write` and `append` functions, or just set a default for all write
+operations with `F.compressionDefault = true` (or `false`).
 
 ## The future
 
-I'd like to add data compression so that even LocalStorage can hold
-more than just 5MB (uncompressed).  Details appear in [the to-do
-list](TODO.md).
+I'd like to add a GUI demo to make this more tangible, and to ease its
+integration into projects for which the demo would be directly re-usable.
+Details appear in [the to-do list](TODO.md).
 
 ## Contributing
 
