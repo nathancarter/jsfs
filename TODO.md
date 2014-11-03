@@ -17,8 +17,6 @@ dialog](http://www.tinymce.com/wiki.php/Tutorials:Creating_custom_dialogs).
 The specifics steps of the plan are below.
 
  * In `demo.litcoffee`, add all the following functionality.
-   * An `onload` handler that runs a setup function.  For now that function
-     can be a stub.
    * A routine that updates the HTML for the view, as a two-column table,
      and puts it into the body of the page.  For now this, too, can be a
      stub that just puts the name of the mode into the body of the page.
