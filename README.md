@@ -71,7 +71,7 @@ is written in a literate language, so it's documentation, too.
  * [rm](jsfs.litcoffee#rm)
  * [mkdir](jsfs.litcoffee#mkdir)
  * [constructor](jsfs.litcoffee#constructor)
- 
+
 You can turn on and off data compression with an optional third parameter to
 the `write` and `append` functions, or just set a default for all write
 operations with `F.compressionDefault = true` (or `false`).
@@ -88,7 +88,7 @@ Details appear in [the to-do list](TODO.md).
 $ git clone https://github.com/nathancarter/jsfs.git
 $ cd jsfs
 $ npm install
-$ cake all
+$ ./node_modules/.bin/cake all
 ```
 
 If you'd like to contribute, [please let me
