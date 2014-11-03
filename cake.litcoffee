@@ -122,7 +122,7 @@ the CoffeeScript compiler on each.
                 runShellCommands [
                     {
                         description : "Compiling tests/#{file}..."
-                        command : "./node_modules/.bin/coffee
+                        command : "../node_modules/.bin/coffee
                                    --compile #{file}"
                         cwd : 'tests'
                     }
