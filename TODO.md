@@ -16,10 +16,6 @@ re-usable in other applications, such as inside a [TinyMCE
 dialog](http://www.tinymce.com/wiki.php/Tutorials:Creating_custom_dialogs).
 The specifics steps of the plan are below.
 
- * Create a `demo` subfolder of the repository.
- * Add a stub `filedialog.litcoffee` file to the `demo` folder.
- * Update `cake.litcoffee` to also compile and minify that file, placing the
-   results in the `demo` folder.
  * Create an `index.html` file in the `demo` folder.  It should be very
    bare, with just these features:
    * has a top portion where we will put controls specific to the demo

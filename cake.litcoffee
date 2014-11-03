@@ -1,28 +1,26 @@
 
 # One build task to rule them all
 
-The following build task builds everything, which at this point
-includes just the jsfs library and the test specs.  See below for
-what each of those individual tasks means.
+The following build task builds everything, which at this point includes
+just the jsfs library and the test specs.  See below for what each of those
+individual tasks means.
 
     taskQueue = []
     next = -> if taskQueue.length then invoke taskQueue.shift()
     task 'all', 'All the tasks listed below', ->
-        taskQueue.push 'build'
-        taskQueue.push 'test'
+        taskQueue = taskQueue.concat [ 'build', 'demo', 'test' ]
         next()
 
-Also, the following utility function is handy for executing a
-sequence of shell commands, and ensuring each succeeds before
-proceeding on to the next.  It will be used in some tasks below.
+Also, the following utility function is handy for executing a sequence of
+shell commands, and ensuring each succeeds before proceeding on to the next.
+It will be used in some tasks below.
 
 Provide it data as a list of object, each with these attributes.
  * `command :` required attribute, string, shell command to run
- * `cwd :` optional attribute, defaults to `'.'`, current working
-   directory in which to run the command
- * `description :` optional attribute, defaults to `command`, the
-   text that will be printed to the console when the command is
-   started
+ * `cwd :` optional attribute, defaults to `'.'`, current working directory
+   in which to run the command
+ * `description :` optional attribute, defaults to `command`, the text that
+   will be printed to the console when the command is started
 
 
     colors = require 'colors'
@@ -42,21 +40,15 @@ Provide it data as a list of object, each with these attributes.
 
 # The main build process
 
-A Cakefile should define the tasks it can perform.  This one can
-perform just one task, "build."  This compiles all the sources
-(in literate coffeescript) into JavaScript, and minifies it, with
-source maps, ready for production use.
-
-    task 'build', 'Compile jsfs.litcoffee into release/', ->
-
 ## Ensure requirements present
 
 In order to build this project, the `node.js` modules listed in
-`packages.json` must be installed.  The following code verifies
-that they are, and tells the user how to install them if they are
-not.
+`packages.json` must be installed.  The following function verifies that
+they are, and tells the user how to install them if they are not.  This
+function is used in each of the build tasks, below.
 
-        fs = require 'fs'
+    fs = require 'fs'
+    ensureRequirementsInstalled = ->
         pj = JSON.parse fs.readFileSync 'package.json'
         missing = ( key for key of pj.dependencies when \
             not fs.existsSync "./node_modules/#{key}" ).join ', '
@@ -68,14 +60,22 @@ not.
 
 ## Compile the one source file
 
-This project is built from one source file, `jsfs.litcoffee`.
-The main step of the build process is to compile that file into
-JavaScript and minify it (with source maps).  We do so now.
+A Cakefile should define the tasks it can perform.  This one can perform
+just one main task, "build."  This compiles all the sources (in literate
+coffeescript) into JavaScript, and minifies it, with source maps, ready for
+production use.
 
-We utilize the `runShellCommands` utility here to run a sequence
-of shell commands in the current directory.  We compile the
-`.litcoffee` source and minify it (creating source maps in both
-steps) and then move the files into the `release/` folder.
+    task 'build', 'Compile jsfs.litcoffee into release/', ->
+        ensureRequirementsInstalled()
+
+This project is built from one source file, `jsfs.litcoffee`. The main step
+of the build process is to compile that file into JavaScript and minify it
+(with source maps).  We do so now.
+
+We utilize the `runShellCommands` utility here to run a sequence of shell
+commands in the current directory.  We compile the `.litcoffee` source and
+minify it (creating source maps in both steps) and then move the files into
+the `release/` folder.
 
         runShellCommands [
             {
@@ -100,19 +100,45 @@ steps) and then move the files into the `release/` folder.
                 source into release folder.'.green
             next()
 
+# The demo build process
+
+There is also a demo subfolder of this repository, which consists of a
+single webpage showing a GUI browser for a `jsfs` filesystem.  This build
+task compiles the `.litcoffee` source for that demo app.
+
+    task 'demo', 'Compile demo/filedialog.litcoffee', ->
+        ensureRequirementsInstalled()
+        runShellCommands [
+            {
+                description : 'Compiling filedialog.licoffee in demo/...'
+                command : '../node_modules/.bin/coffee
+                           --map --compile filedialog.litcoffee'
+                cwd : 'demo'
+            }
+            {
+                description : 'Minifying filedialog.js...'
+                command : '../node_modules/.bin/uglifyjs
+                           -c -m -v false --in-source-map filedialog.js.map
+                           -o filedialog.min.js --source-map
+                           filedialog.min.js.map'
+                cwd : 'demo'
+            }
+        ], ->
+            console.log 'Done building sources for demo/'.green
+            next()
+
 # Testing
 
-The following task compiles the test specs from literate
-CoffeeScript files into JavaScript files, so that the unit testing
-page (in `tests/index.html`) is up-to-date.
+The following task compiles the test specs from literate CoffeeScript files
+into JavaScript files, so that the unit testing page (in `tests/index.html`)
+is up-to-date.
 
     task 'test', 'Compile tests/*.litcoffee test specs', ->
-        colors = require 'colors'
-        fs = require 'fs'
+        ensureRequirementsInstalled()
         html = ( fs.readFileSync 'tests/index.html' ).toString()
 
-First find the list of files to build, and iterate over it, running
-the CoffeeScript compiler on each.
+First find the list of files to build, and iterate over it, running the
+CoffeeScript compiler on each.
 
         toBuild = ( file for file in fs.readdirSync 'tests' when \
             file[-10..] is '.litcoffee' )
@@ -130,17 +156,16 @@ the CoffeeScript compiler on each.
                     file = file[..-11] + '.js'
                     console.log "Done building tests/#{file}."
 
-Also check to see if the file we just compiled is mentioned in the
-unit testing HTML file.  If not, issue a warning that there is a
-compiled test spec that's unused.
+Also check to see if the file we just compiled is mentioned in the unit
+testing HTML file.  If not, issue a warning that there is a compiled test
+spec that's unused.
 
                     if -1 is html.indexOf file
-                        console.log "Warning: Compiled file
-                            #{file} is not mentioned in
-                            tests/index.html!".red
+                        console.log "Warning: Compiled file #{file} is not
+                            mentioned in tests/index.html!".red
 
-When the final parallel build of test specs completes, announce
-successful completion.
+When the final parallel build of test specs completes, announce successful
+completion.
 
                     if ++count is toBuild.length
                         console.log 'All test specs built.  Open

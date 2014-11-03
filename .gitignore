@@ -3,3 +3,5 @@ jsfs.map
 *.swp
 tests/*-spec.js
 .atom-build.json
+demo/*.js
+demo/*.map
