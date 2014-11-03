@@ -1,4 +1,3 @@
-
 //
 // Credit for this goes to Lorenzo Planas, who published it here:
 // https://github.com/qindio/headless-jasmine-sample
