@@ -99,6 +99,7 @@ tests, which appear here.
  * [tests/index.html](tests/index.html)
  * [tests/class-spec.litcoffee](tests/class-spec.litcoffee)
  * [tests/instance-spec.litcoffee](tests/instance-spec.litcoffee)
+ * [tests/compression-spec.litcoffee](tests/compression-spec.litcoffee)
 
 If you plan to extend the API in any way, be sure to update this
 README as well, so that there are links into the appropriate
