@@ -1,5 +1,5 @@
 node_modules/
 jsfs.map
 *.swp
-tests/*.js
+tests/*-spec.js
 .atom-build.json
