@@ -71,6 +71,7 @@ is written in a literate language, so it's documentation, too.
  * [rm](jsfs.litcoffee#rm)
  * [mkdir](jsfs.litcoffee#mkdir)
  * [constructor](jsfs.litcoffee#constructor)
+ 
 You can turn on and off data compression with an optional third parameter to
 the `write` and `append` functions, or just set a default for all write
 operations with `F.compressionDefault = true` (or `false`).
