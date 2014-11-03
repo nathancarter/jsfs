@@ -1,0 +1,24 @@
+<html>
+  <head>
+    <title>jsfs GUI Demo</title>
+    <script language='javascript'>
+      function tellDialog ( message ) {
+          frame.contentWindow.postMessage( message, '*' );
+      }
+      window.onmessage = function ( e ) {
+          console.log( 'page heard this message: ' + e.data );
+      }
+    </script>
+  </head>
+  <body>
+    <center>
+      <div id='toolbar'>
+        Tools will go here.
+      </div>
+      <hr/>
+      <div id='dialog'>
+        <iframe id='frame' src='filedialog.html'></iframe>
+      </div>
+    </center>
+  </body>
+</html>

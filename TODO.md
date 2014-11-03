@@ -16,13 +16,6 @@ re-usable in other applications, such as inside a [TinyMCE
 dialog](http://www.tinymce.com/wiki.php/Tutorials:Creating_custom_dialogs).
 The specifics steps of the plan are below.
 
- * Create an `index.html` file in the `demo` folder.  It should be very
-   bare, with just these features:
-   * has a top portion where we will put controls specific to the demo
-   * has a bottom portion that is an `<iframe>` that loads `filedialog.html`
-     (and that `<iframe>` should be relatively small, so it looks like a
-     dialog)
-   * `filedialog.html` must include the `demo.js` file in the head
  * In a `<script>` tag at the end of `index.html`, create an example
    filesystem in LocalStorage and place a few small text files in it.  (If
    those files were already created and modified, they will be overwritten.
