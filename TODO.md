@@ -16,11 +16,6 @@ re-usable in other applications, such as inside a [TinyMCE
 dialog](http://www.tinymce.com/wiki.php/Tutorials:Creating_custom_dialogs).
 The specifics steps of the plan are below.
 
- * In a `<script>` tag at the end of `index.html`, create an example
-   filesystem in LocalStorage and place a few small text files in it.  (If
-   those files were already created and modified, they will be overwritten.
-   If other files were added to the same filesystem, they will not be
-   altered.)
  * In `demo.litcoffee`, add all the following functionality.
    * An `onload` handler that runs a setup function.  For now that function
      can be a stub.

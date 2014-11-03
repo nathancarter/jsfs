@@ -1,13 +1,41 @@
 <html>
   <head>
     <title>jsfs GUI Demo</title>
+    <script language='javascript' src='../release/jsfs.js'></script>
     <script language='javascript'>
+      // Functions for communicating between this shell page and the demo
+      // file browser loaded in the iframe:
       function tellDialog ( message ) {
           frame.contentWindow.postMessage( message, '*' );
       }
       window.onmessage = function ( e ) {
           console.log( 'page heard this message: ' + e.data );
       }
+      // Code to set up a slightly-populated filesystem, containing just a
+      // few text files:
+      var F = new FileSystem( 'demo' );
+      F.mkdir( 'Notes' );
+      F.mkdir( 'Essays' );
+      F.write( 'Notes/To Do List.txt',
+               '\n'
+             + 'Things to do before Christmas\n'
+             + '-----------------------------\n'
+             + '\n'
+             + ' * Buy Grandma\'s present\n'
+             + ' * Learn to play handbells\n'
+             + ' * Break up with Cindy\n' );
+      F.write( 'Notes/Favorite quotes.txt',
+               'Outside of a dog, a book is a man\'s best friend.  '
+             + 'Inside of a dog, it\'s too dark to read. -- Groucho Marx' );
+      F.write( 'Essays/On life.txt',
+               '[Come back later and put something deep here.]\n'
+             + '[Or something witty.  That sells, too.]' );
+      F.write( 'Essays/Why I hate cucumbers.txt',
+               'Actually, I\'m rather fond of them, which is giving me\n'
+             + 'a good case of writer\'s block for this essay.  Argh!\n'
+             + 'Perhaps I should write\n'
+             + '    "Why I hate \'Why I hate cucumbers\'"\n'
+             + 'instead?' );
     </script>
   </head>
   <body>
