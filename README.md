@@ -3,6 +3,8 @@
 
 *A (small) filesystem stored in the browser's LocalStorage*
 
+![Travis-CI build status](https://travis-ci.org/nathancarter/jsfs.svg?branch=master)
+
 ## Introduction
 
 If you're writing a client-side app, you may want to give the user a
