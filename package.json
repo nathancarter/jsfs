@@ -12,6 +12,6 @@
     "phantomjs" : "1.9.12"
   },
   "scripts" : {
-    "test" : "./node_modules/phantomjs/bin/phantomjs tests/phantom-runner.js tests/index.html"
+    "test" : "./node_modules/.bin/phantomjs tests/phantom-runner.js tests/index.html"
   }
 }
