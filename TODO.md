@@ -16,16 +16,19 @@ re-usable in other applications, such as inside a [TinyMCE
 dialog](http://www.tinymce.com/wiki.php/Tutorials:Creating_custom_dialogs).
 The specifics steps of the plan are below.
 
- * When imitating a dialog in "manage files" mode, use "Manage Files" as the
-   title, and give a "Done" button in the statusbar.  That button should
-   call a callback that can be customized from the outside.  In
-   `index.html`, set the callback so that it just pops up an alert that
-   says, "If this were a real dialog box, this button would close it."
-   Implement the "Done" button in a button-click handler that can take the
-   name of any button that might get added to the statusbar.  This way when
-   this page is placed inside a dialog that provides buttons for it, the
-   "Done" button can be programmatically called by the click handlers for
-   those externally-created buttons.  Use this for all future buttons.
+ * When imitating a dialog in "manage files" mode:
+   * Use "Manage Files" as the title.
+   * Give a "Done" button in the statusbar.
+   * The Done button should call a callback that can be replaced.
+   * In `filedialog.html`, set the callback so that it passes the
+     information on with `tellPage`.
+   * In `index.html`, listen for that message, and pop up a dialog that
+     says, "If this were a real dialog box, this button would close it."
+   * Create a method for programmatically clicking the "Done" button (or any
+     button that sits in the statusbar); the method just calls the callback.
+     (So the "Done" button can be programmatically called by the click
+     handlers for external buttons, when dialog imitation is off, and a real
+     dialog exists.)
  * Implement the update routine for "save file" mode.  This should exclude
    the X icons next to the filename, and should make each file a link that
    places the file's name in a text box at the bottom of the file table
