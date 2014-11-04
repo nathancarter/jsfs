@@ -110,20 +110,39 @@ First we handle the case when the mode is "manage files."
                     makeActionLink icon( 'delete' ), ->
                         askToDeleteEntry file
             if entries.length is 0 then entries.push '(empty filesystem)'
-            document.body.innerHTML = makeTable entries
-            return
+            interior = makeTable entries
 
 Now we have a fallback in the case when we haven't yet implemented the
 visuals to handle the mode correctly.  This just prints that the
 implementation is yet to come.
 
-        document.body.innerHTML = "
-            <p>(This implementation is only just beginning!  It is not at
-                all complete!)<p>
-            <p>File Browser Mode: #{fileBrowserMode}<p>
-            <p>FileSystem Name: #{fsToBrowse.getName()}<p>
-            <p>Imitate Dialog? #{imitateDialog}<p>
-            "
+        else
+            interior = "
+                <p>(This implementation is only just beginning!
+                    It is not at all complete!)<p>
+                <p>File Browser Mode: #{fileBrowserMode}<p>
+                <p>FileSystem Name: #{fsToBrowse.getName()}<p>
+                <p>Imitate Dialog? #{imitateDialog}<p>
+                "
+
+If we are to imitate a dialog box, create the title bar and status bar here.
+
+        titlebar = statusbar = ''
+        if imitateDialog
+            path = fsToBrowse.getCwd()
+            if path is FileSystem::pathSeparator then path += ' (top level)'
+            titlebar = "<table border=1 cellpadding=5 cellspacing=0
+                               width=100% height=100%>
+                        <tr height=1%><td bgcolor=#cccccc align=center>
+                        Folder: #{path}</td></tr>
+                        <tr><td bgcolor=#fafafa valign=top>"
+            statusbar = '</td></tr><tr height=1%>
+                         <td bgcolor=#cccccc align=center>
+                         Status bar will go here</td></tr></table>'
+
+Return the final result.
+
+        document.body.innerHTML = titlebar + interior + statusbar
 
 The following utility function makes a two-column table out of the string
 array given as input.  This is useful for populating the file dialog.

@@ -16,8 +16,6 @@ re-usable in other applications, such as inside a [TinyMCE
 dialog](http://www.tinymce.com/wiki.php/Tutorials:Creating_custom_dialogs).
 The specifics steps of the plan are below.
 
- * When imitating a dialog in any mode, put the path in the title bar's
-   center.
  * When imitating a dialog in "manage files" mode, use "Manage Files" as the
    title, and give a "Done" button in the statusbar.  That button should
    call a callback that can be customized from the outside.  In
