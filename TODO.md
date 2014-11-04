@@ -16,12 +16,6 @@ re-usable in other applications, such as inside a [TinyMCE
 dialog](http://www.tinymce.com/wiki.php/Tutorials:Creating_custom_dialogs).
 The specifics steps of the plan are below.
 
- * In `demo.litcoffee`, add all the following functionality.
-   * A routine for setting the name of the filesystem that this UI should
-     browse.  It defaults to the example name installed in the script tag
-     in `index.html`.  This should end by calling the update routine.
-     It should keep a variable of type `FileSystem` that is replaced with a
-     new one each time this routine is called.
  * To the setup script tag in `index.html`, add a call to the routine that
    tells the browser to imitate a dialog.
  * Create text at the top of `index.html` that explains how this is a test.
