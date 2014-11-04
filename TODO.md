@@ -17,9 +17,6 @@ dialog](http://www.tinymce.com/wiki.php/Tutorials:Creating_custom_dialogs).
 The specifics steps of the plan are below.
 
  * In `demo.litcoffee`, add all the following functionality.
-   * A routine for setting whether the view should imitate a dialog by
-     adding a title bar, buttons, etc. surrounding the table of files and
-     folders.  This should end by calling the update routine.
    * A routine for setting the name of the filesystem that this UI should
      browse.  It defaults to the example name installed in the script tag
      in `index.html`.  This should end by calling the update routine.
