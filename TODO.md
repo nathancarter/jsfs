@@ -17,7 +17,6 @@ dialog](http://www.tinymce.com/wiki.php/Tutorials:Creating_custom_dialogs).
 The specifics steps of the plan are below.
 
  * When imitating a dialog in "manage files" mode:
-   * Use "Manage Files" as the title.
    * Give a "Done" button in the statusbar.
    * The Done button should call a callback that can be replaced.
    * In `filedialog.html`, set the callback so that it passes the

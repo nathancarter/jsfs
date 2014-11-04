@@ -111,12 +111,14 @@ First we handle the case when the mode is "manage files."
                         askToDeleteEntry file
             if entries.length is 0 then entries.push '(empty filesystem)'
             interior = makeTable entries
+            title = 'Manage files'
 
 Now we have a fallback in the case when we haven't yet implemented the
 visuals to handle the mode correctly.  This just prints that the
 implementation is yet to come.
 
         else
+            title = 'Dialog'
             interior = "
                 <p>(This implementation is only just beginning!
                     It is not at all complete!)<p>
@@ -133,12 +135,44 @@ If we are to imitate a dialog box, create the title bar and status bar here.
             if path is FileSystem::pathSeparator then path += ' (top level)'
             titlebar = "<table border=1 cellpadding=5 cellspacing=0
                                width=100% height=100%>
-                        <tr height=1%><td bgcolor=#cccccc align=center>
-                        Folder: #{path}</td></tr>
-                        <tr><td bgcolor=#fafafa valign=top>"
-            statusbar = '</td></tr><tr height=1%>
-                         <td bgcolor=#cccccc align=center>
-                         Status bar will go here</td></tr></table>'
+                          <tr height=1%>
+                            <td bgcolor=#cccccc>
+                              <table border=0 cellpadding=0 cellspacing=0
+                                     width=100%>
+                                <tr>
+                                  <td align=left width=33%>
+                                    <b>#{title}</b>
+                                  </td>
+                                  <td align=center width=34%>
+                                    Folder: #{path}
+                                  </td>
+                                  <td align=right width=33%>
+                                    #{icon 'close'}
+                                  </td>
+                                </tr>
+                              </table>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td bgcolor=#fafafa valign=top>"
+            statusbar = '   </td>
+                          </tr>
+                          <tr height=1%>
+                            <td bgcolor=#cccccc>
+                              <table border=0 cellpadding=0 cellspacing=0
+                                     width=100%>
+                                <tr>
+                                  <td align=left width=50%>
+                                    Status bar info here
+                                  </td>
+                                  <td align=right width=50%>
+                                    Buttons here
+                                  </td>
+                                </tr>
+                              </table>
+                            </td>
+                          </tr>
+                        </table>'
 
 Return the final result.
 
@@ -148,11 +182,17 @@ The following utility function makes a two-column table out of the string
 array given as input.  This is useful for populating the file dialog.
 
     makeTable = ( entries ) ->
-        result = '<table border=0 width=100%>'
+        result = '<table border=0 width=100% cellspacing=5 cellpadding=5>'
         half = Math.ceil entries.length/2
         for i in [0...half]
-            result += "<tr><td width=50%>#{entries[i]}</td>
-                           <td width=50%>#{entries[i+half] or ''}</td></tr>"
+            result += "<tr>
+                         <td width=50% bgcolor=#e8e8e8>
+                           #{entries[i]}
+                         </td>
+                         <td width=50% bgcolor=#e8e8e8>
+                           #{entries[i+half] or ''}
+                         </td>
+                       </tr>"
         result + '</table>'
 
 The following utility function makes a link that calls a script function.
@@ -174,7 +214,7 @@ is an icon (or empty), the second part is left-justified text, and the third
 part is right-justified content (or empty).
 
     rowOf3 = ( icon, text, more = '' ) ->
-        "<table border=0 cellpadding=0 cellspacing=0><tr>
+        "<table border=0 cellpadding=0 cellspacing=0 width=100%><tr>
          <td width=22>#{icon or ''}</td>
-         <td align=left>#{text}</td>
-         <td align=right>#{more}</td></tr></table>"
+         <td align=left>#{text} &nbsp; &nbsp; </td>
+         <td align=left width=66><nobr>#{more}</nobr></td></tr></table>"
