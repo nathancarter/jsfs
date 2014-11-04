@@ -16,9 +16,6 @@ re-usable in other applications, such as inside a [TinyMCE
 dialog](http://www.tinymce.com/wiki.php/Tutorials:Creating_custom_dialogs).
 The specifics steps of the plan are below.
 
- * Add X icons to the right of each file and (non-virtual) folder.  These
-   should prompt for whether the file should be permanently deleted, and if
-   the user says yes, remove the file.
  * When imitating a dialog in any mode, put the path in the title bar's
    center.
  * When imitating a dialog in "manage files" mode, use "Manage Files" as the

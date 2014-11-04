@@ -63,6 +63,17 @@ For now, it is just a stub.
     window.onload = setup = ->
         setFileBrowserMode 'manage files'
 
+# Editing utilities
+
+The following function prompts the user, and if they agree, it deletes the
+given file or folder permanently.  If they disagree, it does nothing.  If it
+deletes the file or folder, then it updates the browser.
+
+    askToDeleteEntry = ( entry ) ->
+        if confirm "Are you sure you want to permantely delete #{entry}?"
+            fsToBrowse.rm entry
+            updateFileBrowser()
+
 # Update
 
 Every time the view needs to be updated, the update routine defined below
@@ -73,27 +84,32 @@ The update routine is as follows.
 
     updateFileBrowser = ->
 
-Constants we'll want to use below.
-
-        UP = '<img src="up-arrow.png" style="vertical-align: -20%;">'
-        FI = '<img src="text-file.png" style="vertical-align: -20%;">'
-        FO = '<img src="folder.png" style="vertical-align: -20%;">'
-
 First we handle the case when the mode is "manage files."
 
         if fileBrowserMode is 'manage files'
             entries = [ ]
             if fsToBrowse.getCwd() isnt FileSystem::pathSeparator
-                entries.push makeActionLink "#{UP} Parent folder", ->
+                action = ->
                     fsToBrowse.cd '..'
                     updateFileBrowser()
+                I = makeActionLink icon( 'up-arrow' ), action
+                T = makeActionLink 'Parent folder', action
+                entries.push rowOf3 I, T
             for folder in fsToBrowse.ls( '.', 'folders' )
-                entries.push makeActionLink "#{FO} #{folder}",
-                    do ( folder ) -> ->
+                do ( folder ) ->
+                    action = ->
                         fsToBrowse.cd folder
                         updateFileBrowser()
+                    I = makeActionLink icon( 'folder' ), action
+                    T = makeActionLink folder, action
+                    X = makeActionLink icon( 'delete' ), ->
+                        askToDeleteEntry folder
+                    entries.push rowOf3 I, T, X
             for file in fsToBrowse.ls '.', 'files'
-                entries.push "#{FI} #{file}"
+                entries.push rowOf3 icon( 'text-file' ), file,
+                    makeActionLink icon( 'delete' ), ->
+                        askToDeleteEntry file
+            if entries.length is 0 then entries.push '(empty filesystem)'
             document.body.innerHTML = makeTable entries
             return
 
@@ -129,3 +145,17 @@ The following utility function makes a link that calls a script function.
         actionLinks.push func
         "<a href='javascript:void(0);'
             onclick='actionLinks[#{number}]();'>#{text}</a>"
+
+The following utility function makes an icon from one in the demo folder.
+
+    icon = ( name ) -> "<img src='#{name}.png'>"
+
+The following utility function makes a three-part row, where the first part
+is an icon (or empty), the second part is left-justified text, and the third
+part is right-justified content (or empty).
+
+    rowOf3 = ( icon, text, more = '' ) ->
+        "<table border=0 cellpadding=0 cellspacing=0><tr>
+         <td width=22>#{icon or ''}</td>
+         <td align=left>#{text}</td>
+         <td align=right>#{more}</td></tr></table>"
