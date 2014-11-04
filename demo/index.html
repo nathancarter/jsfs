@@ -49,7 +49,14 @@
       </div>
       <hr/>
       <div id='toolbar'>
-        Buttons, etc. will go here, but haven't been added yet.
+        Choose dialog mode:
+        <select id='modeSelector'>
+          <option value='manage files'>Manage files</option>
+          <option value='open file'>Open file</option>
+          <option value='save file'>Save file</option>
+          <option value='open folder'>Open folder</option>
+          <option value='save in folder'>Save in folder</option>
+        </select>
       </div>
       <hr/>
       <div id='dialog'>
@@ -61,6 +68,10 @@
   <script language='javascript'>
     window.onload = function () {
         callInDialog( 'setDialogImitation', true );
+    }
+    modeSelector.onchange = function () {
+        callInDialog( 'setFileBrowserMode',
+            modeSelector.options[modeSelector.selectedIndex].value );
     }
   </script>
 </html>

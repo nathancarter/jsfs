@@ -16,7 +16,6 @@ re-usable in other applications, such as inside a [TinyMCE
 dialog](http://www.tinymce.com/wiki.php/Tutorials:Creating_custom_dialogs).
 The specifics steps of the plan are below.
 
- * Add a drop-down that changes the mode of the dialog in the `<iframe>`.
  * Partially implement the update routine for "manage files" mode.  This
    should list a parent folder link (if cwd isn't the root), all folders in
    the cwd, and all files in the cwd, in that order, alphabetical within
