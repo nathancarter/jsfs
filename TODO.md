@@ -16,8 +16,6 @@ re-usable in other applications, such as inside a [TinyMCE
 dialog](http://www.tinymce.com/wiki.php/Tutorials:Creating_custom_dialogs).
 The specifics steps of the plan are below.
 
- * To the setup script tag in `index.html`, add a call to the routine that
-   tells the browser to imitate a dialog.
  * Create text at the top of `index.html` that explains how this is a test.
  * Ensure there is a clear `<hr>` between it and the dialog being tested.
  * Add a drop-down that changes the mode of the dialog in the `<iframe>`.

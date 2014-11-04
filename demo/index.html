@@ -5,8 +5,9 @@
     <script language='javascript'>
       // Functions for communicating between this shell page and the demo
       // file browser loaded in the iframe:
-      function tellDialog ( message ) {
-          frame.contentWindow.postMessage( message, '*' );
+      function callInDialog () {
+          frame.contentWindow.postMessage(
+              Array.prototype.slice.apply( arguments ), '*' );
       }
       window.onmessage = function ( e ) {
           console.log( 'page heard this message: ' + e.data );
@@ -50,4 +51,9 @@
       </div>
     </center>
   </body>
+  <script language='javascript'>
+    window.onload = function () {
+        callInDialog( 'setDialogImitation', true );
+    }
+  </script>
 </html>

@@ -16,7 +16,7 @@ to browsing the one created in the demo page [index.html](index.html).
 When setting the name of the filesystem to browse, an entirely new
 `FileSystem` object is created.  The old one is discarded.
 
-    setFileSystemName = ( name ) ->
+    window.setFileSystemName = ( name ) ->
         fsToBrowse = new FileSystem name
         updateFileBrowser()
 
@@ -37,7 +37,7 @@ fresh.
         'open folder'
         'save in folder'
     ]
-    setFileBrowserMode = ( mode ) ->
+    window.setFileBrowserMode = ( mode ) ->
         fileBrowserMode = mode if mode in validBrowserModes
         updateFileBrowser()
 
@@ -51,7 +51,7 @@ do so is stored in a global variable, here.
 Whether to imitate a dialog can only be true or false, so we use `!!` to
 coerce things to a boolean.
 
-    setDialogImitation = ( enable = yes ) ->
+    window.setDialogImitation = ( enable = yes ) ->
         imitateDialog = !!enable
         updateFileBrowser()
 
