@@ -55,6 +55,17 @@ coerce things to a boolean.
         imitateDialog = !!enable
         updateFileBrowser()
 
+It's also important to be able to programmatically click buttons.  The
+default way this works is that the call is passed along to the `tellPage`
+function in `filedialog.html`, which, in turn, sends it to the containing
+page via inter-frame message passing.  If you re-use this demo UI in an
+actual application, this behavior can be overridden at either level; you can
+assign a new handler over this function, or over `tellPage`, whichever you
+prefer.
+
+    window.buttonClicked = ( name ) ->
+        tellPage [ 'buttonClicked', name ]
+
 # Setup
 
 When the demo GUI page loads, the following setup routine must get called.
@@ -112,6 +123,7 @@ First we handle the case when the mode is "manage files."
             if entries.length is 0 then entries.push '(empty filesystem)'
             interior = makeTable entries
             title = 'Manage files'
+            buttons = [ 'Done' ]
 
 Now we have a fallback in the case when we haven't yet implemented the
 visuals to handle the mode correctly.  This just prints that the
@@ -119,6 +131,7 @@ implementation is yet to come.
 
         else
             title = 'Dialog'
+            buttons = [ ]
             interior = "
                 <p>(This implementation is only just beginning!
                     It is not at all complete!)<p>
@@ -132,6 +145,9 @@ If we are to imitate a dialog box, create the title bar and status bar here.
         titlebar = statusbar = ''
         if imitateDialog
             path = fsToBrowse.getCwd()
+            buttons = ( "<input type='button' value='#{text}'
+                          onclick='buttonClicked(\"#{text}\");'>" \
+                        for text in buttons ).join ' '
             if path is FileSystem::pathSeparator then path += ' (top level)'
             titlebar = "<table border=1 cellpadding=5 cellspacing=0
                                width=100% height=100%>
@@ -155,7 +171,7 @@ If we are to imitate a dialog box, create the title bar and status bar here.
                           </tr>
                           <tr>
                             <td bgcolor=#fafafa valign=top>"
-            statusbar = '   </td>
+            statusbar = "   </td>
                           </tr>
                           <tr height=1%>
                             <td bgcolor=#cccccc>
@@ -166,13 +182,13 @@ If we are to imitate a dialog box, create the title bar and status bar here.
                                     Status bar info here
                                   </td>
                                   <td align=right width=50%>
-                                    Buttons here
+                                    #{buttons}
                                   </td>
                                 </tr>
                               </table>
                             </td>
                           </tr>
-                        </table>'
+                        </table>"
 
 Return the final result.
 

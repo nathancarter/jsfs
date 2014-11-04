@@ -10,6 +10,13 @@
               Array.prototype.slice.apply( arguments ), '*' );
       }
       window.onmessage = function ( e ) {
+          if ( e.data[0] == 'buttonClicked' ) {
+              if ( e.data[1] == 'Done' ) {
+                  alert( 'This is just a demo app.  If it were a real app, '
+                       + 'clicking that button would close the dialog.' );
+                  return;
+              }
+          }
           console.log( 'page heard this message: ' + e.data );
       }
       // Code to set up a slightly-populated filesystem, containing just a
