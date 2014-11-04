@@ -17,10 +17,6 @@ dialog](http://www.tinymce.com/wiki.php/Tutorials:Creating_custom_dialogs).
 The specifics steps of the plan are below.
 
  * In `demo.litcoffee`, add all the following functionality.
-   * A routine for setting the mode of the filesystem browser, and a few
-     global constants that will be its only acceptable parameters.  This
-     should end by calling the update routine.  The default value is
-     "manage files" mode.
    * A routine for setting whether the view should imitate a dialog by
      adding a title bar, buttons, etc. surrounding the table of files and
      folders.  This should end by calling the update routine.
