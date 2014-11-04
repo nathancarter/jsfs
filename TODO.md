@@ -16,12 +16,6 @@ re-usable in other applications, such as inside a [TinyMCE
 dialog](http://www.tinymce.com/wiki.php/Tutorials:Creating_custom_dialogs).
 The specifics steps of the plan are below.
 
- * Partially implement the update routine for "manage files" mode.  This
-   should list a parent folder link (if cwd isn't the root), all folders in
-   the cwd, and all files in the cwd, in that order, alphabetical within
-   those three types, and with appropriate icons to their left.
- * Upgrade the folder names in that view to be links that change the cwd.
-   This includes the virtual "parent folder" link.
  * Add X icons to the right of each file and (non-virtual) folder.  These
    should prompt for whether the file should be permanently deleted, and if
    the user says yes, remove the file.

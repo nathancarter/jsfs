@@ -72,10 +72,60 @@ write it.
 The update routine is as follows.
 
     updateFileBrowser = ->
+
+Constants we'll want to use below.
+
+        UP = '<img src="up-arrow.png" style="vertical-align: -20%;">'
+        FI = '<img src="text-file.png" style="vertical-align: -20%;">'
+        FO = '<img src="folder.png" style="vertical-align: -20%;">'
+
+First we handle the case when the mode is "manage files."
+
+        if fileBrowserMode is 'manage files'
+            entries = [ ]
+            if fsToBrowse.getCwd() isnt FileSystem::pathSeparator
+                entries.push makeActionLink "#{UP} Parent folder", ->
+                    fsToBrowse.cd '..'
+                    updateFileBrowser()
+            for folder in fsToBrowse.ls( '.', 'folders' )
+                entries.push makeActionLink "#{FO} #{folder}",
+                    do ( folder ) -> ->
+                        fsToBrowse.cd folder
+                        updateFileBrowser()
+            for file in fsToBrowse.ls '.', 'files'
+                entries.push "#{FI} #{file}"
+            document.body.innerHTML = makeTable entries
+            return
+
+Now we have a fallback in the case when we haven't yet implemented the
+visuals to handle the mode correctly.  This just prints that the
+implementation is yet to come.
+
         document.body.innerHTML = "
             <p>(This implementation is only just beginning!  It is not at
                 all complete!)<p>
             <p>File Browser Mode: #{fileBrowserMode}<p>
             <p>FileSystem Name: #{fsToBrowse.getName()}<p>
             <p>Imitate Dialog? #{imitateDialog}<p>
-            " # temporary stub
+            "
+
+The following utility function makes a two-column table out of the string
+array given as input.  This is useful for populating the file dialog.
+
+    makeTable = ( entries ) ->
+        result = '<table border=0 width=100%>'
+        half = Math.ceil entries.length/2
+        for i in [0...half]
+            result += "<tr><td width=50%>#{entries[i]}</td>
+                           <td width=50%>#{entries[i+half] or ''}</td></tr>"
+        result + '</table>'
+
+The following utility function makes a link that calls a script function.
+
+    window.actionLinks = [ ]
+    clearActionLinks = -> actionLinks = [ ]
+    makeActionLink = ( text, func ) ->
+        number = actionLinks.length
+        actionLinks.push func
+        "<a href='javascript:void(0);'
+            onclick='actionLinks[#{number}]();'>#{text}</a>"
