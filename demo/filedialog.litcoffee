@@ -102,9 +102,14 @@ and the signal will indicate whether the move succeeded or failed.
             args.push path + saveFileName.value
             if fileBeingMoved.name
                 args.unshift fileBeingMoved.full
-                success = fsToBrowse.mv fileBeingMoved.full,
-                    path + saveFileName.value
-                name = if success then 'Moved' else 'Move failed'
+                if fileBeingMoved.copy
+                    success = fsToBrowse.cp fileBeingMoved.full,
+                        path + saveFileName.value
+                    name = if success then 'Copied' else 'Copy failed'
+                else
+                    success = fsToBrowse.mv fileBeingMoved.full,
+                        path + saveFileName.value
+                    name = if success then 'Moved' else 'Move failed'
 
 When passing the "Save here" button, also pass the
 current working directory.
@@ -160,6 +165,7 @@ the settings required for "manage files" mode.
             filesDisabled : no
             moveFiles : yes
             moveFolders : yes
+            copyFiles : yes
 
 We also set up other defaults, for title bar and status bar content.
 
@@ -173,13 +179,15 @@ mode has somehow been set to an invalid value, the defaults will hold.
             buttons = [ 'New folder', 'Done' ]
         else if fileBrowserMode is 'save file'
             features.deleteFolders = features.deleteFiles =
-                features.moveFiles = features.moveFolders = no
+                features.moveFiles = features.moveFolders =
+                features.copyFiles = no
             features.fileNameTextBox = yes
             title = 'Save as...'
             buttons = [ 'New folder', 'Cancel', 'Save' ]
         else if fileBrowserMode is 'save in folder'
             features.deleteFolders = features.deleteFiles =
-                features.moveFiles = features.moveFolders = no
+                features.moveFiles = features.moveFolders =
+                features.copyFiles = no
             features.filesDisabled = yes
             title = 'Save in...'
             buttons = [ 'New folder', 'Cancel', 'Save here' ]
@@ -233,6 +241,7 @@ parent folder, except they can also be deleted, if and only if the
                             if fileBeingMoved.full[-1..] isnt sep
                                 fileBeingMoved.full += sep
                             fileBeingMoved.full += folder
+                            fileBeingMoved.copy = no
                             fileBrowserMode = 'save file'
                             updateFileBrowser()
             entries.push rowOf3 I, T, X
@@ -268,6 +277,21 @@ cannot be navigated, but they can be deleted if and only if the
                             if fileBeingMoved.full[-1..] isnt sep
                                 fileBeingMoved.full += sep
                             fileBeingMoved.full += file
+                            fileBeingMoved.copy = no
+                            fileBrowserMode = 'save file'
+                            updateFileBrowser()
+            if features.copyFiles
+                do ( file ) ->
+                    X += makeActionLink icon( 'copy' ),
+                        'Copy file ' + file, ->
+                            window.fileBeingMoved = name : file
+                            fileBeingMoved.path = fsToBrowse.getCwd()
+                            fileBeingMoved.full = fileBeingMoved.path
+                            sep = FileSystem::pathSeparator
+                            if fileBeingMoved.full[-1..] isnt sep
+                                fileBeingMoved.full += sep
+                            fileBeingMoved.full += file
+                            fileBeingMoved.copy = yes
                             fileBrowserMode = 'save file'
                             updateFileBrowser()
             entries.push rowOf3 I, T, X

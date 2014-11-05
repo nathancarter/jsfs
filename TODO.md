@@ -16,8 +16,6 @@ re-usable in other applications, such as inside a [TinyMCE
 dialog](http://www.tinymce.com/wiki.php/Tutorials:Creating_custom_dialogs).
 The specifics steps of the plan are below.
 
- * Repeat the previous task, but with "Copy" icons analogous to the "Move"
-   icons.
  * Implement the update routine for "Open file" mode.
    * Files and folders should have no X/mv/cp icons.
    * Place a drop-down control as the last row of the table for filtering

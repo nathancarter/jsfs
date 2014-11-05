@@ -45,6 +45,19 @@
                        + 'To here: ' + e.data[3] );
                   return;
               }
+              if ( e.data[1] == 'Copied' ) {
+                  alert( 'This is just a demo app, so it gives some '
+                       + 'debugging info, like this:\n\n'
+                       + 'You just copied this: ' + e.data[2] + '\n'
+                       + 'To here: ' + e.data[3] );
+                  return;
+              }
+              if ( e.data[1] == 'Copy failed' ) {
+                  alert( 'The following copy operation FAILED:\n\n'
+                       + 'Copying this: ' + e.data[2] + '\n'
+                       + 'To here: ' + e.data[3] );
+                  return;
+              }
           }
           // dump generic debugging information if message unknown
           console.log( 'page heard this message: ' + e.data );
