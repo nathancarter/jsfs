@@ -480,7 +480,7 @@ array given as input.  This is useful for populating the file dialog.
             right = entries[i+half]
             rcolor = 'bgcolor=#e8e8e8'
             if not right then rcolor = ''
-            if right[...6] is 'SELECT'
+            else if right[...6] is 'SELECT'
                 rcolor = 'bgcolor=#ddddff'
                 right = right[6..]
             result += "<tr>
