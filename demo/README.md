@@ -14,6 +14,8 @@ $ ./node_modeuls/.bin/cake all
 
 Then point your browser at `jsfs/demo/index.html`.
 
+![Screenshot](screenshot.png)
+
 ## Purposes
 
 This demo serves two purposes.
