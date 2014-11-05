@@ -150,7 +150,7 @@ write it.
 
 The update routine is as follows.
 
-    updateFileBrowser = ->
+    window.updateFileBrowser = ->
 
 We will track the set of features that need to be enabled or disabled,
 depending on the mode in which the dialog is operating.  This defaults to
@@ -166,6 +166,7 @@ the settings required for "manage files" mode.
             moveFiles : yes
             moveFolders : yes
             copyFiles : yes
+            extensionFilter : no
 
 We also set up other defaults, for title bar and status bar content.
 
@@ -191,6 +192,12 @@ mode has somehow been set to an invalid value, the defaults will hold.
             features.filesDisabled = yes
             title = 'Save in...'
             buttons = [ 'New folder', 'Cancel', 'Save here' ]
+        else if fileBrowserMode is 'open file'
+            features.deleteFolders = features.deleteFiles =
+                features.moveFiles = features.moveFolders =
+                features.copyFiles = no
+            features.extensionFilter = yes
+            buttons = [ 'Cancel', 'Open' ]
 
 We will store in the following array the set of entries that will show up in
 the center of the dialog, in a two-column tables.
@@ -213,10 +220,10 @@ filesystem root.
             entries.push rowOf3 I, T
 
 Next, the links to all other folders in the cwd.  These are just like the
-parent folder, except they can also be deleted, if and only if the
-`deleteFolders` feature is enabled in the features set.
+parent folder, except they can also be deleted or moved, if and only if the
+`deleteFolders` or `moveFolders` feature is enabled in the features set.
 
-        for folder in fsToBrowse.ls( '.', 'folders' )
+        for folder in fsToBrowse.ls '.', 'folders'
             I = icon 'folder'
             T = folder
             if features.navigateFolders
@@ -247,10 +254,19 @@ parent folder, except they can also be deleted, if and only if the
             entries.push rowOf3 I, T, X
 
 After the folders in the cwd, we also list all the files in the cwd.  These
-cannot be navigated, but they can be deleted if and only if the
-`deleteFiles` feature is nabled in the features set.
+cannot be navigated, but they can be deleted, moved, or copied if and only
+if the `deleteFiles`, `moveFiles`, or `copyFiles` feature is enabled in the
+features set.
+
+Also, files can be filtered using a drop-down list of extensions.  Let's find out if the user has picked an item from that list.
+
+        filter = fileFilter?.options[fileFilter?.selectedIndex].value
+        if filter is '*.*' then filter = null else filter = filter?[1..]
+
+Now proceed to examine all the files.
 
         for file in fsToBrowse.ls '.', 'files'
+            if filter and file[-filter.length..] isnt filter then continue
             I = icon 'text-file'
             T = file
             if features.filesDisabled
@@ -311,9 +327,17 @@ the content proper.
 
         titlebar = statusbar = ''
         if features.fileNameTextBox
-            statusbar = "File name:
-                         <input id='saveFileName' type='text' width=40
-                                onkeyup='enableOrDisableSaveButton();'/>"
+            statusbar += "File name:
+                          <input id='saveFileName' type='text' width=40
+                                 onkeyup='enableOrDisableSaveButton();'/>"
+        if features.extensionFilter
+            extensions = ( "<option>#{e}</option>" \
+                for e in allExtensions() )
+            statusbar += "File type:
+                          <select id='fileFilter'
+                                  onchange='updateFileBrowser();'>
+                            #{extensions.join '\n'}
+                          </select>"
 
 The interior of the dialog is created.  We will add to it a title bar and a
 status bar if and only if we have been asked to do so.  The following code
@@ -371,13 +395,17 @@ the necessary HTML to do so.
 Place the final result in the document.
 
 If there is a "save file" text box, preserve its contents across changes to
-the DOM.  Also, there is a global variable that can be set to contain the
-name of the file being moved, when a move operation is in process; if that
-is the case, then use that as the save filename.
+the DOM.  Do the same for a "file type" drop-down list.
+
+Also, there is a global variable that can be set to contain the name of the
+file being moved, when a move operation is in process; if that is the case,
+then use that as the save filename.
 
         oldName = saveFileName?.value or fileBeingMoved?.name
+        oldIndex = fileFilter?.selectedIndex
         document.body.innerHTML = titlebar + interior + statusbar
         if oldName and saveFileName? then saveFileName.value = oldName
+        if oldIndex and fileFilter? then fileFilter.selectedIndex = oldIndex
         enableOrDisableSaveButton()
 
 The above function depends on a handler to enable/disable the Save button
@@ -428,3 +456,23 @@ part is right-justified content (or empty).
          <td width=22>#{icon or ''}</td>
          <td align=left>#{text} &nbsp; &nbsp; </td>
          <td align=left width=66><nobr>#{more}</nobr></td></tr></table>"
+
+The following utility function finds all extensions on all files in the
+whole filesystem, and returns them in alphabetical order.  This is useful
+for creating a drop-down list of extensions for filtering in the "open"
+version of the dialog.
+
+    allExtensions = ( F = null ) ->
+        if not F then F = new FileSystem fsToBrowse.getName()
+        result = [ '*.*' ]
+        for file in F.ls '.', 'files'
+            extension = /\.[^.]*?$/.exec file
+            if extension
+                extension = '*' + extension
+                if extension not in result then result.push extension
+        for folder in F.ls '.', 'folders'
+            F.cd folder
+            for extension in allExtensions F
+                if extension not in result then result.push extension
+            F.cd '..'
+        result.sort()

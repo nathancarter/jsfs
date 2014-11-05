@@ -17,11 +17,6 @@ dialog](http://www.tinymce.com/wiki.php/Tutorials:Creating_custom_dialogs).
 The specifics steps of the plan are below.
 
  * Implement the update routine for "Open file" mode.
-   * Files and folders should have no X/mv/cp icons.
-   * Place a drop-down control as the last row of the table for filtering
-     file types by extension.  Have as choices all extensions that appear
-     in the entire filesystem.  Also always have `*.*` as a choice.
-   * When the drop-down control changes, filter the files shown in the view.
    * If a file is clicked, it should become visibly selected, and any other
      previously-selected files become visibly deselected.
    * This should fire callbacks notifying of file selection, for use in
