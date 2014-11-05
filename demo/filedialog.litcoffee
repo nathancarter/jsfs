@@ -64,6 +64,17 @@ assign a new handler over this function, or over `tellPage`, whichever you
 prefer.
 
     window.buttonClicked = ( name ) ->
+
+The only button we handle internally is the "New folder" button.  All others
+are passed on to the page.
+
+        if name is 'New folder'
+            folderName = prompt 'Enter name of new folder', 'My Folder'
+            if fsToBrowse.mkdir folderName
+                updateFileBrowser()
+            else
+                alert 'That folder name is already in use.'
+            return
         tellPage [ 'buttonClicked', name ]
 
 # Setup
@@ -123,7 +134,7 @@ First we handle the case when the mode is "manage files."
             if entries.length is 0 then entries.push '(empty filesystem)'
             interior = makeTable entries
             title = 'Manage files'
-            buttons = [ 'Done' ]
+            buttons = [ 'New folder', 'Done' ]
 
 Now we have a fallback in the case when we haven't yet implemented the
 visuals to handle the mode correctly.  This just prints that the
