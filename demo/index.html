@@ -32,6 +32,19 @@
                        + 'Save into the folder ' + e.data[2] + '.' );
                   return;
               }
+              if ( e.data[1] == 'Moved' ) {
+                  alert( 'This is just a demo app, so it gives some '
+                       + 'debugging info, like this:\n\n'
+                       + 'You just moved this: ' + e.data[2] + '\n'
+                       + 'To here: ' + e.data[3] );
+                  return;
+              }
+              if ( e.data[1] == 'Move failed' ) {
+                  alert( 'The following move operation FAILED:\n\n'
+                       + 'Moving this: ' + e.data[2] + '\n'
+                       + 'To here: ' + e.data[3] );
+                  return;
+              }
           }
           // dump generic debugging information if message unknown
           console.log( 'page heard this message: ' + e.data );

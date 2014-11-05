@@ -16,20 +16,7 @@ re-usable in other applications, such as inside a [TinyMCE
 dialog](http://www.tinymce.com/wiki.php/Tutorials:Creating_custom_dialogs).
 The specifics steps of the plan are below.
 
- * In "manage files" mode, add "Move" icons next to every file and folder.
-   * This should switch to "Save as file/folder" mode (which mode depending
-     on the type of the thing being moved) and store in an internal state
-     variable the full path to the file to be moved.
-   * Ensure that the buttons in `index.html` for changing modes of the demo
-     dialog also clear out this internal state variable.  (You could do this
-     by having all mode changes clear the variable, and then just ensure
-     that internal mode changes set the state after doing the mode change.)
-   * Update the dialog so that when "Save as file/folder" mode ends, if that
-     internal state is non-null, then move is attempted.  Its success or
-     failure is reported by a "move" callback, rather than a straight "save"
-     callback.  There is no need for `index.html` to install a handler for
-     it; a silent response is okay.
-   * Ensure that the save modes do not show the move icons.
+ * Implement the move operation for folders as well.  (Files are done.)
  * Repeat the previous task, but with "Copy" icons analogous to the "Move"
    icons.
  * Implement the update routine for "Open file" mode.

@@ -41,6 +41,13 @@ fresh.
         fileBrowserMode = mode if mode in validBrowserModes
         updateFileBrowser()
 
+## Moving a file
+
+When moving a file, we store in this global variable the name, folder, and
+absolute path of the file being moved.
+
+    window.fileBeingMoved = { }
+
 ## Dialog imitation
 
 It can imitate a dialog box by adding a status bar and title bar; whether to
@@ -76,16 +83,32 @@ are passed on to the page.
                 alert 'That folder name is already in use.'
             return
 
-When passing the "Save" button, also pass the currently-chosen filename
-under which to save.  When passing the "Save here" button, also pass the
-current working directory.
+All other buttons are handled externally, but some need special processing
+before we pass to the page the information that a button was clicked.  We
+store any additional information we'll be passing the page in the following
+arguments list.
 
         args = [ ]
+
+When passing the "Save" button, also pass the currently-chosen filename
+under which to save.  But if a file is actually being moved, then send a
+"move" signal instead of a "save" signal.  The file will be moved right now,
+and the signal will indicate whether the move succeeded or failed.
+
         if name is 'Save'
             path = fsToBrowse.getCwd()
             if path[-1..] isnt FileSystem::pathSeparator
                 path += FileSystem::pathSeparator
             args.push path + saveFileName.value
+            if fileBeingMoved.name
+                args.unshift fileBeingMoved.full
+                success = fsToBrowse.mv fileBeingMoved.full,
+                    path + saveFileName.value
+                name = if success then 'Moved' else 'Move failed'
+
+When passing the "Save here" button, also pass the
+current working directory.
+
         if name is 'Save here' then args.push fsToBrowse.getCwd()
 
 Send signal now.  Also, any button that was clicked in the status bar
@@ -93,6 +116,7 @@ completes the job of this dialog, thus returning us to "manage files" mode,
 if the dialog even remains open.  Thus we make that change now.
 
         tellPage [ 'buttonClicked', name ].concat args
+        window.fileBeingMoved = { }
         setFileBrowserMode 'manage files'
 
 # Setup
@@ -135,6 +159,7 @@ the settings required for "manage files" mode.
             createFolders : yes
             fileNameTextBox : no
             filesDisabled : no
+            moveFiles : yes
 
 We also set up other defaults, for title bar and status bar content.
 
@@ -147,12 +172,14 @@ mode has somehow been set to an invalid value, the defaults will hold.
         if fileBrowserMode is 'manage files'
             buttons = [ 'New folder', 'Done' ]
         else if fileBrowserMode is 'save file'
-            features.deleteFolders = features.deleteFiles = no
+            features.deleteFolders = features.deleteFiles =
+                features.moveFiles = no
             features.fileNameTextBox = yes
             title = 'Save as...'
             buttons = [ 'New folder', 'Cancel', 'Save' ]
         else if fileBrowserMode is 'save in folder'
-            features.deleteFolders = features.deleteFiles = no
+            features.deleteFolders = features.deleteFiles =
+                features.moveFiles = no
             features.filesDisabled = yes
             title = 'Save in...'
             buttons = [ 'New folder', 'Cancel', 'Save here' ]
@@ -173,8 +200,8 @@ filesystem root.
             T = 'Parent folder'
             if features.navigateFolders
                 action = -> fsToBrowse.cd '..' ; updateFileBrowser()
-                I = makeActionLink I, action
-                T = makeActionLink T, action
+                I = makeActionLink I, 'Go up to parent folder', action
+                T = makeActionLink T, 'Go up to parent folder', action
             entries.push rowOf3 I, T
 
 Next, the links to all other folders in the cwd.  These are just like the
@@ -187,13 +214,14 @@ parent folder, except they can also be deleted, if and only if the
             if features.navigateFolders
                 do ( folder ) ->
                     action = -> fsToBrowse.cd folder ; updateFileBrowser()
-                    I = makeActionLink I, action
-                    T = makeActionLink T, action
+                    I = makeActionLink I, 'Enter folder ' + folder, action
+                    T = makeActionLink T, 'Enter folder ' + folder, action
             X = ''
             if features.deleteFolders
                 do ( folder ) ->
-                    X = makeActionLink icon( 'delete' ), ->
-                        askToDeleteEntry folder
+                    X = makeActionLink icon( 'delete' ),
+                        'Delete folder ' + folder, ->
+                            askToDeleteEntry folder
             entries.push rowOf3 I, T, X
 
 After the folders in the cwd, we also list all the files in the cwd.  These
@@ -208,13 +236,27 @@ cannot be navigated, but they can be deleted if and only if the
             if features.fileNameTextBox
                 do ( file ) ->
                     action = -> saveFileName.value = file
-                    I = makeActionLink I, action
-                    T = makeActionLink T, action
+                    I = makeActionLink I, 'Save as ' + file, action
+                    T = makeActionLink T, 'Save as ' + file, action
             X = ''
             if features.deleteFiles
                 do ( file ) ->
-                    X = makeActionLink icon( 'delete' ), ->
-                        askToDeleteEntry file
+                    X += makeActionLink icon( 'delete' ),
+                        'Delete file ' + file, ->
+                            askToDeleteEntry file
+            if features.moveFiles
+                do ( file ) ->
+                    X += makeActionLink icon( 'move' ),
+                        'Move file ' + file, ->
+                            window.fileBeingMoved = name : file
+                            fileBeingMoved.path = fsToBrowse.getCwd()
+                            fileBeingMoved.full = fileBeingMoved.path
+                            sep = FileSystem::pathSeparator
+                            if fileBeingMoved.full[-1..] isnt sep
+                                fileBeingMoved.full += sep
+                            fileBeingMoved.full += file
+                            fileBrowserMode = 'save file'
+                            updateFileBrowser()
             entries.push rowOf3 I, T, X
 
 Now create the interior of the dialog using the `makeTable` function,
@@ -289,12 +331,16 @@ the necessary HTML to do so.
                           </tr>
                         </table>"
 
-Place the final result in the document.  If there is a "save file" text box,
-preserve its contents across changes to the DOM.
+Place the final result in the document.
 
-        oldName = saveFileName?.value
+If there is a "save file" text box, preserve its contents across changes to
+the DOM.  Also, there is a global variable that can be set to contain the
+name of the file being moved, when a move operation is in process; if that
+is the case, then use that as the save filename.
+
+        oldName = saveFileName?.value or fileBeingMoved?.name
         document.body.innerHTML = titlebar + interior + statusbar
-        if oldName and saveFileName then saveFileName.value = oldName
+        if oldName and saveFileName? then saveFileName.value = oldName
         enableOrDisableSaveButton()
 
 The above function depends on a handler to enable/disable the Save button
@@ -326,10 +372,10 @@ The following utility function makes a link that calls a script function.
 
     window.actionLinks = [ ]
     clearActionLinks = -> actionLinks = [ ]
-    makeActionLink = ( text, func ) ->
+    makeActionLink = ( text, tooltip, func ) ->
         number = actionLinks.length
         actionLinks.push func
-        "<a href='javascript:void(0);'
+        "<a href='javascript:void(0);' title='#{tooltip}'
             onclick='actionLinks[#{number}]();'>#{text}</a>"
 
 The following utility function makes an icon from one in the demo folder.
