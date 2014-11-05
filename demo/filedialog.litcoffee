@@ -48,6 +48,19 @@ absolute path of the file being moved.
 
     window.fileBeingMoved = { }
 
+## Opening a file
+
+When opening a file, one particular file will be selected before the user
+clicks the "Open" button.  This global variable records the name of that
+file.  Only the name is needed, not the path, since only files in the
+current directory can be selected.
+
+    window.fileToBeOpened = null
+    window.selectFile = ( name ) ->
+        window.fileToBeOpened = name
+        tellPage [ 'selectedFile', name ]
+        updateFileBrowser()
+
 ## Dialog imitation
 
 It can imitate a dialog box by adding a status bar and title bar; whether to
@@ -111,10 +124,18 @@ and the signal will indicate whether the move succeeded or failed.
                         path + saveFileName.value
                     name = if success then 'Moved' else 'Move failed'
 
-When passing the "Save here" button, also pass the
-current working directory.
+When passing the "Save here" button, also pass the current working
+directory.
 
         if name is 'Save here' then args.push fsToBrowse.getCwd()
+
+When pasing the "Open" button, also pass the full path to the file to open.
+
+        if name is 'Open'
+            path = fsToBrowse.getCwd()
+            if path[-1..] isnt FileSystem::pathSeparator
+                path += FileSystem::pathSeparator
+            args.push path + fileToBeOpened
 
 Send signal now.  Also, any button that was clicked in the status bar
 completes the job of this dialog, thus returning us to "manage files" mode,
@@ -122,6 +143,7 @@ if the dialog even remains open.  Thus we make that change now.
 
         tellPage [ 'buttonClicked', name ].concat args
         window.fileBeingMoved = { }
+        selectFile null
         setFileBrowserMode 'manage files'
 
 # Setup
@@ -167,6 +189,7 @@ the settings required for "manage files" mode.
             moveFolders : yes
             copyFiles : yes
             extensionFilter : no
+            selectFile : no
 
 We also set up other defaults, for title bar and status bar content.
 
@@ -196,7 +219,7 @@ mode has somehow been set to an invalid value, the defaults will hold.
             features.deleteFolders = features.deleteFiles =
                 features.moveFiles = features.moveFolders =
                 features.copyFiles = no
-            features.extensionFilter = yes
+            features.extensionFilter = features.selectFile = yes
             buttons = [ 'Cancel', 'Open' ]
 
 We will store in the following array the set of entries that will show up in
@@ -214,7 +237,7 @@ filesystem root.
             I = icon 'up-arrow'
             T = 'Parent folder'
             if features.navigateFolders
-                action = -> fsToBrowse.cd '..' ; updateFileBrowser()
+                action = -> fsToBrowse.cd '..' ; selectFile null
                 I = makeActionLink I, 'Go up to parent folder', action
                 T = makeActionLink T, 'Go up to parent folder', action
             entries.push rowOf3 I, T
@@ -228,7 +251,7 @@ parent folder, except they can also be deleted or moved, if and only if the
             T = folder
             if features.navigateFolders
                 do ( folder ) ->
-                    action = -> fsToBrowse.cd folder ; updateFileBrowser()
+                    action = -> fsToBrowse.cd folder ; selectFile null
                     I = makeActionLink I, 'Enter folder ' + folder, action
                     T = makeActionLink T, 'Enter folder ' + folder, action
             X = ''
@@ -254,11 +277,12 @@ parent folder, except they can also be deleted or moved, if and only if the
             entries.push rowOf3 I, T, X
 
 After the folders in the cwd, we also list all the files in the cwd.  These
-cannot be navigated, but they can be deleted, moved, or copied if and only
-if the `deleteFiles`, `moveFiles`, or `copyFiles` feature is enabled in the
-features set.
+cannot be navigated, but they can be deleted, moved, copied, or selected if
+and only if the `deleteFiles`, `moveFiles`, `copyFiles`, or `selectFile`
+feature is enabled in the features set.
 
-Also, files can be filtered using a drop-down list of extensions.  Let's find out if the user has picked an item from that list.
+Also, files can be filtered using a drop-down list of extensions.  Let's
+find out if the user has picked an item from that list.
 
         filter = fileFilter?.options[fileFilter?.selectedIndex].value
         if filter is '*.*' then filter = null else filter = filter?[1..]
@@ -271,6 +295,11 @@ Now proceed to examine all the files.
             T = file
             if features.filesDisabled
                 T = "<font color='#888888'>#{T}</font>"
+            else if features.selectFile
+                do ( file ) ->
+                    action = -> selectFile file
+                    I = makeActionLink I, 'Open ' + file, action
+                    T = makeActionLink T, 'Open ' + file, action
             if features.fileNameTextBox
                 do ( file ) ->
                     action = -> saveFileName.value = file
@@ -310,7 +339,9 @@ Now proceed to examine all the files.
                             fileBeingMoved.copy = yes
                             fileBrowserMode = 'save file'
                             updateFileBrowser()
-            entries.push rowOf3 I, T, X
+            entry = rowOf3 I, T, X
+            if fileToBeOpened is file then entry = "SELECT#{entry}"
+            entries.push entry
 
 Now create the interior of the dialog using the `makeTable` function,
 defined below.  If the entries list is empty, then we must be at the root
@@ -346,10 +377,14 @@ the necessary HTML to do so.
 
         if imitateDialog
             path = fsToBrowse.getCwd()
-            buttons = ( "<input type='button' value='#{text}'
-                          id='statusBarButton#{text}'
-                          onclick='buttonClicked(\"#{text}\");'>" \
-                        for text in buttons ).join ' '
+            for text, index in buttons
+                disable = ''
+                if text is 'Open' and not fileToBeOpened
+                    disable = 'disabled=true'
+                buttons[index] = "<input type='button' value='#{text}'
+                                   id='statusBarButton#{text}' #{disable}
+                                   onclick='buttonClicked(\"#{text}\");'>"
+            buttons = buttons.join ' '
             if path is FileSystem::pathSeparator then path += ' (top level)'
             titlebar = "<table border=1 cellpadding=5 cellspacing=0
                                width=100% height=100%>
@@ -413,7 +448,10 @@ based on whether the file name has been filled in.  The following function
 is that handler.
 
     window.enableOrDisableSaveButton = ->
-        statusBarButtonSave?.disabled = !saveFileName?.value
+        name = saveFileName?.value
+        statusBarButtonSave?.disabled = !name
+        if typeof name is 'string'
+            tellPage [ 'saveFileNameChanged', name ]
 
 The following utility function makes a two-column table out of the string
 array given as input.  This is useful for populating the file dialog.
@@ -423,13 +461,19 @@ array given as input.  This is useful for populating the file dialog.
         half = Math.ceil entries.length/2
         for i in [0...half]
             left = entries[i]
+            lcolor = 'bgcolor=#e8e8e8'
+            if left[...6] is 'SELECT'
+                lcolor = 'bgcolor=#ddddff'
+                left = left[6..]
             right = entries[i+half]
+            rcolor = 'bgcolor=#e8e8e8'
+            if not right then rcolor = ''
+            if right[...6] is 'SELECT'
+                rcolor = 'bgcolor=#ddddff'
+                right = right[6..]
             result += "<tr>
-                         <td width=50% bgcolor=#e8e8e8>#{left}</td>
-                         <td width=50%
-                           #{if right then 'bgcolor=#e8e8e8' else ''}>
-                           #{right or ''}
-                         </td>
+                         <td width=50% #{lcolor}>#{left}</td>
+                         <td width=50% #{rcolor}>#{right or ''}</td>
                        </tr>"
         result + '</table>'
 

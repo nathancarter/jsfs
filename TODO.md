@@ -16,22 +16,6 @@ re-usable in other applications, such as inside a [TinyMCE
 dialog](http://www.tinymce.com/wiki.php/Tutorials:Creating_custom_dialogs).
 The specifics steps of the plan are below.
 
- * Implement the update routine for "Open file" mode.
-   * If a file is clicked, it should become visibly selected, and any other
-     previously-selected files become visibly deselected.
-   * This should fire callbacks notifying of file selection, for use in
-     enabling/disabling an Open button.  Similarly, navigating into a
-     folder, which deselects all files, should fire a callback that no file
-     is selected.
-   * The statusbar should have Open and Cancel buttons.
-   * The Open button should listen for the selection callback and only be
-     enabled when a file is selected.
-   * Cancel should fire a callback, and `index.html` should install one that
-     just pops up an alert.
-   * Open should fire a callback if and only if a file is selected.  (It
-     should be disabled otherwise.)
-   * Install from `index.html` a superficial callback function that pops up
-     an alert with the file contents shown as JSON.
  * Implement the update routine for "Open folder" mode.  It's the same as
    "Open file" mode, but with the following differences.
    * The Open button will be called "Open this folder."

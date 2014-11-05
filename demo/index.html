@@ -58,6 +58,16 @@
                        + 'To here: ' + e.data[3] );
                   return;
               }
+              if ( e.data[1] == 'Open' ) {
+                  var content = F.read( e.data[2] );
+                  if ( typeof( content ) != 'string' )
+                      content = JSON.stringify( content, null, 2 );
+                  alert( 'This is just a demo app, so it cannot open '
+                       + 'files.  But here is a rough approximation of '
+                       + 'the content of the file you tried to open:\n\n'
+                       + content );
+                  return;
+              }
           }
           // dump generic debugging information if message unknown
           console.log( 'page heard this message: ' + e.data );
@@ -110,7 +120,7 @@
       </div>
       <hr/>
       <div id='dialog'>
-        <iframe id='frame' src='filedialog.html' width=500 height=300>
+        <iframe id='frame' src='filedialog.html' width=600 height=400>
         </iframe>
       </div>
     </center>
