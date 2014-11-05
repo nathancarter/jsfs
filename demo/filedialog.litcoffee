@@ -122,10 +122,9 @@ if the dialog even remains open.  Thus we make that change now.
 # Setup
 
 When the demo GUI page loads, the following setup routine must get called.
-For now, it is just a stub.
+It simply sets the default mode, which also populates the view.
 
-    window.onload = setup = ->
-        setFileBrowserMode 'manage files'
+    window.onload = setup = -> setFileBrowserMode 'manage files'
 
 # Editing utilities
 
@@ -160,6 +159,7 @@ the settings required for "manage files" mode.
             fileNameTextBox : no
             filesDisabled : no
             moveFiles : yes
+            moveFolders : yes
 
 We also set up other defaults, for title bar and status bar content.
 
@@ -173,13 +173,13 @@ mode has somehow been set to an invalid value, the defaults will hold.
             buttons = [ 'New folder', 'Done' ]
         else if fileBrowserMode is 'save file'
             features.deleteFolders = features.deleteFiles =
-                features.moveFiles = no
+                features.moveFiles = features.moveFolders = no
             features.fileNameTextBox = yes
             title = 'Save as...'
             buttons = [ 'New folder', 'Cancel', 'Save' ]
         else if fileBrowserMode is 'save in folder'
             features.deleteFolders = features.deleteFiles =
-                features.moveFiles = no
+                features.moveFiles = features.moveFolders = no
             features.filesDisabled = yes
             title = 'Save in...'
             buttons = [ 'New folder', 'Cancel', 'Save here' ]
@@ -219,9 +219,22 @@ parent folder, except they can also be deleted, if and only if the
             X = ''
             if features.deleteFolders
                 do ( folder ) ->
-                    X = makeActionLink icon( 'delete' ),
+                    X += makeActionLink icon( 'delete' ),
                         'Delete folder ' + folder, ->
                             askToDeleteEntry folder
+            if features.moveFolders
+                do ( file ) ->
+                    X += makeActionLink icon( 'move' ),
+                        'Move folder ' + folder, ->
+                            window.fileBeingMoved = name : folder
+                            fileBeingMoved.path = fsToBrowse.getCwd()
+                            fileBeingMoved.full = fileBeingMoved.path
+                            sep = FileSystem::pathSeparator
+                            if fileBeingMoved.full[-1..] isnt sep
+                                fileBeingMoved.full += sep
+                            fileBeingMoved.full += folder
+                            fileBrowserMode = 'save file'
+                            updateFileBrowser()
             entries.push rowOf3 I, T, X
 
 After the folders in the cwd, we also list all the files in the cwd.  These
