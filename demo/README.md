@@ -1,6 +1,19 @@
 
 # Demo
 
+## Cut to the chase
+
+To play with the demo:
+
+```
+$ git clone https://github.com/nathancarter/jsfs.git
+$ cd jsfs
+$ npm install
+$ ./node_modeuls/.bin/cake all
+```
+
+Then point your browser at `jsfs/demo/index.html`.
+
 ## Purposes
 
 This demo serves two purposes.
