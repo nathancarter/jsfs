@@ -507,7 +507,8 @@
       fs = this._getFilesystemObject();
       sourcePath = this.separate(source);
       file = this.walkPathAndFile(fs, sourcePath);
-      if (!file) {
+      console.log(fs, file);
+      if (!file || !(file instanceof Array)) {
         return false;
       }
       _ref = this.separateWithFilename(dest), path = _ref.path, name = _ref.name;
