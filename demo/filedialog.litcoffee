@@ -212,12 +212,13 @@ array given as input.  This is useful for populating the file dialog.
         result = '<table border=0 width=100% cellspacing=5 cellpadding=5>'
         half = Math.ceil entries.length/2
         for i in [0...half]
+            left = entries[i]
+            right = entries[i+half]
             result += "<tr>
-                         <td width=50% bgcolor=#e8e8e8>
-                           #{entries[i]}
-                         </td>
-                         <td width=50% bgcolor=#e8e8e8>
-                           #{entries[i+half] or ''}
+                         <td width=50% bgcolor=#e8e8e8>#{left}</td>
+                         <td width=50%
+                           #{if right then 'bgcolor=#e8e8e8' else ''}>
+                           #{right or ''}
                          </td>
                        </tr>"
         result + '</table>'
