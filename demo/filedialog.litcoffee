@@ -77,16 +77,22 @@ are passed on to the page.
             return
 
 When passing the "Save" button, also pass the currently-chosen filename
-under which to save.
+under which to save.  When passing the "Save here" button, also pass the
+current working directory.
 
         args = [ ]
-        if name is 'Save' then args.push saveFileName.value
+        if name is 'Save'
+            path = fsToBrowse.getCwd()
+            if path[-1..] isnt FileSystem::pathSeparator
+                path += FileSystem::pathSeparator
+            args.push path + saveFileName.value
+        if name is 'Save here' then args.push fsToBrowse.getCwd()
+
+Send signal now.  Also, any button that was clicked in the status bar
+completes the job of this dialog, thus returning us to "manage files" mode,
+if the dialog even remains open.  Thus we make that change now.
+
         tellPage [ 'buttonClicked', name ].concat args
-
-Any button that was clicked in the status bar completes the job of this
-dialog, thus returning us to "manage files" mode, if the dialog even remains
-open.  Thus we make that change now.
-
         setFileBrowserMode 'manage files'
 
 # Setup
@@ -128,6 +134,7 @@ the settings required for "manage files" mode.
             deleteFiles : yes
             createFolders : yes
             fileNameTextBox : no
+            filesDisabled : no
 
 We also set up other defaults, for title bar and status bar content.
 
@@ -144,6 +151,11 @@ mode has somehow been set to an invalid value, the defaults will hold.
             features.fileNameTextBox = yes
             title = 'Save as...'
             buttons = [ 'New folder', 'Cancel', 'Save' ]
+        else if fileBrowserMode is 'save in folder'
+            features.deleteFolders = features.deleteFiles = no
+            features.filesDisabled = yes
+            title = 'Save in...'
+            buttons = [ 'New folder', 'Cancel', 'Save here' ]
 
 We will store in the following array the set of entries that will show up in
 the center of the dialog, in a two-column tables.
@@ -191,6 +203,8 @@ cannot be navigated, but they can be deleted if and only if the
         for file in fsToBrowse.ls '.', 'files'
             I = icon 'text-file'
             T = file
+            if features.filesDisabled
+                T = "<font color='#888888'>#{T}</font>"
             if features.fileNameTextBox
                 do ( file ) ->
                     action = -> saveFileName.value = file

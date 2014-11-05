@@ -10,19 +10,30 @@
               Array.prototype.slice.apply( arguments ), '*' );
       }
       window.onmessage = function ( e ) {
+          // reset mode selector, because dialog always reset its own mode
+          modeSelector.selectedIndex = 0;
+          // handle those buttons whose names we know
           if ( e.data[0] == 'buttonClicked' ) {
               if ( ( e.data[1] == 'Done' ) || ( e.data[1] == 'Cancel' ) ) {
                   alert( 'This is just a demo app.  If it were a real app, '
-                       + 'clicking that button would close the dialog.' );
+                       + 'clicking that button would:\n\n'
+                       + 'Close the dialog.' );
                   return;
               }
               if ( e.data[1] == 'Save' ) {
                   alert( 'This is just a demo app.  If it were a real app, '
-                       + 'clicking that button would save a file under "'
-                       + e.data[2] + '" in the current folder.' );
+                       + 'clicking that button would:\n\n'
+                       + 'Save a file at ' + e.data[2] + '.' );
+                  return;
+              }
+              if ( e.data[1] == 'Save here' ) {
+                  alert( 'This is just a demo app.  If it were a real app, '
+                       + 'clicking that button would:\n\n'
+                       + 'Save into the folder ' + e.data[2] + '.' );
                   return;
               }
           }
+          // dump generic debugging information if message unknown
           console.log( 'page heard this message: ' + e.data );
       }
       // Code to set up a slightly-populated filesystem, containing just a
