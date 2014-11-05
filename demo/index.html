@@ -16,6 +16,12 @@
                        + 'clicking that button would close the dialog.' );
                   return;
               }
+              if ( e.data[1] == 'Save' ) {
+                  alert( 'This is just a demo app.  If it were a real app, '
+                       + 'clicking that button would save a file under "'
+                       + e.data[2] + '" in the current folder.' );
+                  return;
+              }
           }
           console.log( 'page heard this message: ' + e.data );
       }

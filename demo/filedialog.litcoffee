@@ -75,7 +75,13 @@ are passed on to the page.
             else
                 alert 'That folder name is already in use.'
             return
-        tellPage [ 'buttonClicked', name ]
+
+When passing the "Save" button, also pass the currently-chosen filename
+under which to save.
+
+        args = [ ]
+        if name is 'Save' then args.push saveFileName.value
+        tellPage [ 'buttonClicked', name ].concat args
 
 # Setup
 
@@ -106,54 +112,113 @@ The update routine is as follows.
 
     updateFileBrowser = ->
 
-First we handle the case when the mode is "manage files."
+We will track the set of features that need to be enabled or disabled,
+depending on the mode in which the dialog is operating.  This defaults to
+the settings required for "manage files" mode.
+
+        features =
+            navigateFolders : yes
+            deleteFolders : yes
+            deleteFiles : yes
+            createFolders : yes
+            fileNameTextBox : no
+
+We also set up other defaults, for title bar and status bar content.
+
+        title = fileBrowserMode[0].toUpperCase() + fileBrowserMode[1..]
+        buttons = [ ]
+
+Now we update the above default options based on the current mode.  If the
+mode has somehow been set to an invalid value, the defaults will hold.
 
         if fileBrowserMode is 'manage files'
-            entries = [ ]
-            if fsToBrowse.getCwd() isnt FileSystem::pathSeparator
-                action = ->
-                    fsToBrowse.cd '..'
-                    updateFileBrowser()
-                I = makeActionLink icon( 'up-arrow' ), action
-                T = makeActionLink 'Parent folder', action
-                entries.push rowOf3 I, T
-            for folder in fsToBrowse.ls( '.', 'folders' )
+            buttons = [ 'New folder', 'Done' ]
+        else if fileBrowserMode is 'save file'
+            features.deleteFolders = features.deleteFiles = no
+            features.fileNameTextBox = yes
+            buttons = [ 'New folder', 'Save' ]
+
+We will store in the following array the set of entries that will show up in
+the center of the dialog, in a two-column tables.
+
+        entries = [ ]
+
+We add to that array all the folders in the cwd.  These are links if and
+only if `navigateFolders` was enabled in the features set.
+
+First, the link to the parent folder, if and only if we're not at the
+filesystem root.
+
+        if fsToBrowse.getCwd() isnt FileSystem::pathSeparator
+            I = icon 'up-arrow'
+            T = 'Parent folder'
+            if features.navigateFolders
+                action = -> fsToBrowse.cd '..' ; updateFileBrowser()
+                I = makeActionLink I, action
+                T = makeActionLink T, action
+            entries.push rowOf3 I, T
+
+Next, the links to all other folders in the cwd.  These are just like the
+parent folder, except they can also be deleted, if and only if the
+`deleteFolders` feature is enabled in the features set.
+
+        for folder in fsToBrowse.ls( '.', 'folders' )
+            I = icon 'folder'
+            T = folder
+            if features.navigateFolders
                 do ( folder ) ->
-                    action = ->
-                        fsToBrowse.cd folder
-                        updateFileBrowser()
-                    I = makeActionLink icon( 'folder' ), action
-                    T = makeActionLink folder, action
+                    action = -> fsToBrowse.cd folder ; updateFileBrowser()
+                    I = makeActionLink I, action
+                    T = makeActionLink T, action
+            X = ''
+            if features.deleteFolders
+                do ( folder ) ->
                     X = makeActionLink icon( 'delete' ), ->
                         askToDeleteEntry folder
-                    entries.push rowOf3 I, T, X
-            for file in fsToBrowse.ls '.', 'files'
-                entries.push rowOf3 icon( 'text-file' ), file,
-                    makeActionLink icon( 'delete' ), ->
+            entries.push rowOf3 I, T, X
+
+After the folders in the cwd, we also list all the files in the cwd.  These
+cannot be navigated, but they can be deleted if and only if the
+`deleteFiles` feature is nabled in the features set.
+
+        for file in fsToBrowse.ls '.', 'files'
+            I = icon 'text-file'
+            T = file
+            if features.fileNameTextBox
+                do ( file ) ->
+                    action = -> saveFileName.value = file
+                    I = makeActionLink I, action
+                    T = makeActionLink T, action
+            X = ''
+            if features.deleteFiles
+                do ( file ) ->
+                    X = makeActionLink icon( 'delete' ), ->
                         askToDeleteEntry file
-            if entries.length is 0 then entries.push '(empty filesystem)'
-            interior = makeTable entries
-            title = 'Manage files'
-            buttons = [ 'New folder', 'Done' ]
+            entries.push rowOf3 I, T, X
 
-Now we have a fallback in the case when we haven't yet implemented the
-visuals to handle the mode correctly.  This just prints that the
-implementation is yet to come.
+Now create the interior of the dialog using the `makeTable` function,
+defined below.  If the entries list is empty, then we must be at the root
+and there are no files or folders, so in that unusual case, include a
+message indicating that the entire filesystem is empty.
 
-        else
-            title = 'Dialog'
-            buttons = [ ]
-            interior = "
-                <p>(This implementation is only just beginning!
-                    It is not at all complete!)<p>
-                <p>File Browser Mode: #{fileBrowserMode}<p>
-                <p>FileSystem Name: #{fsToBrowse.getName()}<p>
-                <p>Imitate Dialog? #{imitateDialog}<p>
-                "
+        if entries.length is 0 then entries.push '(empty filesystem)'
+        interior = makeTable entries
 
-If we are to imitate a dialog box, create the title bar and status bar here.
+If this is a "save" dialog, we need a text box into which to type the
+filename under which we wish to save.  We add it to the status bar, but if
+we are not in dialog-imitation mode, that will automatically get moved into
+the content proper.
 
         titlebar = statusbar = ''
+        if features.fileNameTextBox
+            statusbar = "File name:
+                         <input id='saveFileName' type='text' width=40/>"
+
+The interior of the dialog is created.  We will add to it a title bar and a
+status bar if and only if we have been asked to do so.  The following code
+checks to see if we are supposed to imitate a dialog box, and if so, creates
+the necessary HTML to do so.
+
         if imitateDialog
             path = fsToBrowse.getCwd()
             buttons = ( "<input type='button' value='#{text}'
@@ -190,7 +255,7 @@ If we are to imitate a dialog box, create the title bar and status bar here.
                                      width=100%>
                                 <tr>
                                   <td align=left width=50%>
-                                    Status bar info here
+                                    #{statusbar}
                                   </td>
                                   <td align=right width=50%>
                                     #{buttons}
@@ -201,9 +266,12 @@ If we are to imitate a dialog box, create the title bar and status bar here.
                           </tr>
                         </table>"
 
-Return the final result.
+Place the final result in the document.  If there is a "save file" text box,
+preserve its contents across changes to the DOM.
 
+        oldName = saveFileName?.value
         document.body.innerHTML = titlebar + interior + statusbar
+        if oldName and saveFileName then saveFileName.value = oldName
 
 The following utility function makes a two-column table out of the string
 array given as input.  This is useful for populating the file dialog.

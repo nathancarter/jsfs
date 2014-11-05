@@ -16,10 +16,6 @@ re-usable in other applications, such as inside a [TinyMCE
 dialog](http://www.tinymce.com/wiki.php/Tutorials:Creating_custom_dialogs).
 The specifics steps of the plan are below.
 
- * Implement the update routine for "save file" mode.  This should exclude
-   the X icons next to the filename, and should make each file a link that
-   places the file's name in a text box at the bottom of the file table
-   (spanning both columns).
  * When imitating a dialog in "save file" mode, use "Save as..." as the
    title, and give "Save" and "Cancel" in the statusbar.
    * Save should call a callback and then return to "manage files" mode.
