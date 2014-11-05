@@ -16,13 +16,6 @@ re-usable in other applications, such as inside a [TinyMCE
 dialog](http://www.tinymce.com/wiki.php/Tutorials:Creating_custom_dialogs).
 The specifics steps of the plan are below.
 
- * When imitating a dialog in "save file" mode, use "Save as..." as the
-   title, and give "Save" and "Cancel" in the statusbar.
-   * Save should call a callback and then return to "manage files" mode.
-     In `index.html`, install a callback that just pops up an alert saying
-     that the file would be saved under a certain name.
-   * Cancel should do the same, but with a cancellation message instead,
-     again through a callback installed by `index.html`.
  * Implement the update routine for "save in folder" mode.  This should show
    files only grayed out, unclickable.  They should have no X icons.  The
    Save button should change name to "Save here."

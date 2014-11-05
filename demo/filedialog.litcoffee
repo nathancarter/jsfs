@@ -83,6 +83,12 @@ under which to save.
         if name is 'Save' then args.push saveFileName.value
         tellPage [ 'buttonClicked', name ].concat args
 
+Any button that was clicked in the status bar completes the job of this
+dialog, thus returning us to "manage files" mode, if the dialog even remains
+open.  Thus we make that change now.
+
+        setFileBrowserMode 'manage files'
+
 # Setup
 
 When the demo GUI page loads, the following setup routine must get called.
@@ -136,7 +142,8 @@ mode has somehow been set to an invalid value, the defaults will hold.
         else if fileBrowserMode is 'save file'
             features.deleteFolders = features.deleteFiles = no
             features.fileNameTextBox = yes
-            buttons = [ 'New folder', 'Save' ]
+            title = 'Save as...'
+            buttons = [ 'New folder', 'Cancel', 'Save' ]
 
 We will store in the following array the set of entries that will show up in
 the center of the dialog, in a two-column tables.
@@ -212,7 +219,8 @@ the content proper.
         titlebar = statusbar = ''
         if features.fileNameTextBox
             statusbar = "File name:
-                         <input id='saveFileName' type='text' width=40/>"
+                         <input id='saveFileName' type='text' width=40
+                                onkeyup='enableOrDisableSaveButton();'/>"
 
 The interior of the dialog is created.  We will add to it a title bar and a
 status bar if and only if we have been asked to do so.  The following code
@@ -222,6 +230,7 @@ the necessary HTML to do so.
         if imitateDialog
             path = fsToBrowse.getCwd()
             buttons = ( "<input type='button' value='#{text}'
+                          id='statusBarButton#{text}'
                           onclick='buttonClicked(\"#{text}\");'>" \
                         for text in buttons ).join ' '
             if path is FileSystem::pathSeparator then path += ' (top level)'
@@ -272,6 +281,14 @@ preserve its contents across changes to the DOM.
         oldName = saveFileName?.value
         document.body.innerHTML = titlebar + interior + statusbar
         if oldName and saveFileName then saveFileName.value = oldName
+        enableOrDisableSaveButton()
+
+The above function depends on a handler to enable/disable the Save button
+based on whether the file name has been filled in.  The following function
+is that handler.
+
+    window.enableOrDisableSaveButton = ->
+        statusBarButtonSave?.disabled = !saveFileName?.value
 
 The following utility function makes a two-column table out of the string
 array given as input.  This is useful for populating the file dialog.
