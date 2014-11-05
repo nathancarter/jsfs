@@ -68,9 +68,17 @@
                        + content );
                   return;
               }
+              if ( e.data[1] == 'Open folder' ) {
+                  alert( 'This is just a demo app, so it cannot open '
+                       + 'folders (except to browse into them in manage '
+                       + 'files mode).\n\n'
+                       + 'You asked to open this folder: ' + e.data[2] );
+                  return;
+              }
           }
           // dump generic debugging information if message unknown
-          console.log( 'page heard this message: ' + e.data );
+          console.log( 'This event happened: ' + e.data[0] + '("'
+                     + e.data.slice( 1 ).join( '","' ) + '")' );
       }
       // Code to set up a slightly-populated filesystem, containing just a
       // few text files:
@@ -102,25 +110,30 @@
   <body>
     <center>
       <div>
-        This page is a test.  The section below contains controls for
-        changing the state of the frame at the bottom.  The frame at the
-        bottom shows the dialog in its current state, and lets you interact
-        with it.
-      </div>
-      <hr/>
-      <div id='toolbar'>
-        Choose dialog mode:
+        <h1>Demo UI</h1>
+        <p>This page demonstrates the
+        <a href='https://github.com/nathancarter/jsfs'>jsfs</a> project by
+        providing a UI that accesses a simple filesystem.<br>
+        The filesystem has been seeded with a few files and folders for
+        you to browse.</p>
+        <p>The UI can be imported into other projects, if that's helpful,
+        and to that end, it has several modes.<br>You can test them all out
+        here by choosing one from the drop-down list below.</p>
+        <p>See <a href='https://github.com/nathancarter/jsfs/blob/master/demo/README.md'>the
+        README file</a> for more information about this demo.</p>
+        <p>Choose dialog mode:
         <select id='modeSelector'>
           <option value='manage files'>Manage files</option>
           <option value='open file'>Open file</option>
           <option value='save file'>Save file</option>
           <option value='open folder'>Open folder</option>
           <option value='save in folder'>Save in folder</option>
-        </select>
+        </select></p>
       </div>
       <hr/>
       <div id='dialog'>
-        <iframe id='frame' src='filedialog.html' width=600 height=400>
+        <iframe id='frame' src='filedialog.html' width=600 height=400
+                frameBorder=0>
         </iframe>
       </div>
     </center>

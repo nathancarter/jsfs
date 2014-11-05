@@ -129,13 +129,19 @@ directory.
 
         if name is 'Save here' then args.push fsToBrowse.getCwd()
 
-When pasing the "Open" button, also pass the full path to the file to open.
+When passing the "Open" button, also pass the full path to the file to open.
 
         if name is 'Open'
             path = fsToBrowse.getCwd()
             if path[-1..] isnt FileSystem::pathSeparator
                 path += FileSystem::pathSeparator
             args.push path + fileToBeOpened
+
+When passing the "Open this folder" button, also pass the cwd.
+
+        if name is 'Open this folder'
+            args.push fsToBrowse.getCwd()
+            name = 'Open folder'
 
 Send signal now.  Also, any button that was clicked in the status bar
 completes the job of this dialog, thus returning us to "manage files" mode,
@@ -221,6 +227,12 @@ mode has somehow been set to an invalid value, the defaults will hold.
                 features.copyFiles = no
             features.extensionFilter = features.selectFile = yes
             buttons = [ 'Cancel', 'Open' ]
+        else if fileBrowserMode is 'open folder'
+            features.deleteFolders = features.deleteFiles =
+                features.moveFiles = features.moveFolders =
+                features.copyFiles = no
+            features.filesDisabled = yes
+            buttons = [ 'Cancel', 'Open this folder' ]
 
 We will store in the following array the set of entries that will show up in
 the center of the dialog, in a two-column tables.
