@@ -12,9 +12,12 @@ $ npm install
 $ ./node_modeuls/.bin/cake all
 ```
 
-Then point your browser at `jsfs/demo/index.html`.
+Then point your browser at `jsfs/demo/index.html`.  It looks like this:
 
-![Screenshot](screenshot.png)
+<center>
+  <img src='screenshot.png' alt='Screenshot'
+       style='border: solid 1px gray; padding: 1em;'/>
+</center>
 
 ## Purposes
 
