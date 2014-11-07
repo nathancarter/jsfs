@@ -231,7 +231,8 @@ mode has somehow been set to an invalid value, the defaults will hold.
                 features.copyFiles = no
             features.fileNameTextBox = yes
             title = 'Save as...'
-            buttons = [ 'New folder', 'Cancel', 'Save' ]
+            buttons = [ 'Cancel', 'Save' ]
+            if imitateDialog then buttons.unshift 'New folder'
         else if fileBrowserMode is 'save in folder'
             features.deleteFolders = features.deleteFiles =
                 features.moveFiles = features.moveFolders =
@@ -291,7 +292,7 @@ parent folder, except they can also be deleted or moved, if and only if the
                         'Delete folder ' + folder, ->
                             askToDeleteEntry folder
             if features.moveFolders
-                do ( file ) ->
+                do ( folder ) ->
                     X += makeActionLink icon( 'move' ),
                         'Move folder ' + folder, ->
                             window.fileBeingMoved = name : folder
@@ -400,6 +401,18 @@ the content proper.
                             #{extensions.join '\n'}
                           </select>"
 
+Construct the HTML for the buttons, which may be used in the status bar or
+above it.
+
+        for text, index in buttons
+            disable = ''
+            if text is 'Open' and not fileToBeOpened
+                disable = 'disabled=true'
+            buttons[index] = "<input type='button' value='  #{text}  '
+                               id='statusBarButton#{text}' #{disable}
+                               onclick='buttonClicked(\"#{text}\");'/>"
+        buttons = buttons.join ' '
+
 The interior of the dialog is created.  We will add to it a title bar and a
 status bar if and only if we have been asked to do so.  The following code
 checks to see if we are supposed to imitate a dialog box, and if so, creates
@@ -407,14 +420,6 @@ the necessary HTML to do so.
 
         if imitateDialog
             path = fsToBrowse.getCwd()
-            for text, index in buttons
-                disable = ''
-                if text is 'Open' and not fileToBeOpened
-                    disable = 'disabled=true'
-                buttons[index] = "<input type='button' value='#{text}'
-                                   id='statusBarButton#{text}' #{disable}
-                                   onclick='buttonClicked(\"#{text}\");'>"
-            buttons = buttons.join ' '
             if path is FileSystem::pathSeparator then path += ' (top level)'
             titlebar = "<table border=1 cellpadding=5 cellspacing=0
                                width=100% height=100%>
@@ -459,9 +464,14 @@ the necessary HTML to do so.
 
 If we are not to create a title bar and status bar, then any status bar
 content we've already created needs to be embedded in the document itself
-instead.
+instead.  In the special case where we are moving or copying a file, and
+thus we need save/cancel buttons, and yet we are not in dialog imitation
+mode, we move those buttons into the statusbar, so that they will be
+embedded in the interior of the dialog.
 
         else
+            if window.fileBeingMoved.name
+                statusbar += " &nbsp; " + buttons
             statusbar = "<div style='position: absolute; bottom: 0;
                                      width: 90%; margin-bottom: 5px;'>
                            <center>#{statusbar}</center>
@@ -482,6 +492,7 @@ then use that as the save filename.
         if oldName and saveFileName? then saveFileName.value = oldName
         if oldIndex and fileFilter? then fileFilter.selectedIndex = oldIndex
         enableOrDisableSaveButton()
+        if saveFileName? then saveFileName.focus()
 
 The above function depends on a handler to enable/disable the Save button
 based on whether the file name has been filled in.  The following function
