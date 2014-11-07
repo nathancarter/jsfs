@@ -61,6 +61,19 @@ current directory can be selected.
         tellPage [ 'selectedFile', name ]
         updateFileBrowser()
 
+## Changing folders
+
+Whenever the browser changes folders, several things must happen, so it is
+convenient to collect them into one method.  First, the filesystem itself
+must change its cwd.  Second, the page containing this browser must be
+notified.  Finally, any selected file needs to be deselected, thus updating
+the view.
+
+    changeFolder = ( destination ) ->
+        fsToBrowse.cd destination
+        tellPage [ 'changedFolder', fsToBrowse.getCwd() ]
+        selectFile null
+
 ## Dialog imitation
 
 It can imitate a dialog box by adding a status bar and title bar; whether to
@@ -155,9 +168,12 @@ if the dialog even remains open.  Thus we make that change now.
 # Setup
 
 When the demo GUI page loads, the following setup routine must get called.
-It simply sets the default mode, which also populates the view.
+It simply sets the default mode, which also populates the view, and notifies
+the page of the initial cwd.
 
-    window.onload = setup = -> setFileBrowserMode 'manage files'
+    window.onload = setup = ->
+        setFileBrowserMode 'manage files'
+        changeFolder '.'
 
 # Editing utilities
 
@@ -199,7 +215,9 @@ the settings required for "manage files" mode.
 
 We also set up other defaults, for title bar and status bar content.
 
-        title = fileBrowserMode[0].toUpperCase() + fileBrowserMode[1..]
+        title = if fileBrowserMode then \
+            fileBrowserMode[0].toUpperCase() + fileBrowserMode[1..] \
+            else ''
         buttons = [ ]
 
 Now we update the above default options based on the current mode.  If the
@@ -249,7 +267,7 @@ filesystem root.
             I = icon 'up-arrow'
             T = 'Parent folder'
             if features.navigateFolders
-                action = -> fsToBrowse.cd '..' ; selectFile null
+                action = -> changeFolder '..'
                 I = makeActionLink I, 'Go up to parent folder', action
                 T = makeActionLink T, 'Go up to parent folder', action
             entries.push rowOf3 I, T
@@ -263,7 +281,7 @@ parent folder, except they can also be deleted or moved, if and only if the
             T = folder
             if features.navigateFolders
                 do ( folder ) ->
-                    action = -> fsToBrowse.cd folder ; selectFile null
+                    action = -> changeFolder folder
                     I = makeActionLink I, 'Enter folder ' + folder, action
                     T = makeActionLink T, 'Enter folder ' + folder, action
             X = ''
@@ -371,7 +389,7 @@ the content proper.
         titlebar = statusbar = ''
         if features.fileNameTextBox
             statusbar += "File name:
-                          <input id='saveFileName' type='text' width=40
+                          <input id='saveFileName' type='text' size=40
                                  onkeyup='enableOrDisableSaveButton();'/>"
         if features.extensionFilter
             extensions = ( "<option>#{e}</option>" \
@@ -438,6 +456,16 @@ the necessary HTML to do so.
                             </td>
                           </tr>
                         </table>"
+
+If we are not to create a title bar and status bar, then any status bar
+content we've already created needs to be embedded in the document itself
+instead.
+
+        else
+            statusbar = "<div style='position: absolute; bottom: 0;
+                                     width: 90%; margin-bottom: 5px;'>
+                           <center>#{statusbar}</center>
+                         </div>"
 
 Place the final result in the document.
 
