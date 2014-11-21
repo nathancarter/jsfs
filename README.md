@@ -76,12 +76,6 @@ You can turn on and off data compression with an optional third parameter to
 the `write` and `append` functions, or just set a default for all write
 operations with `F.compressionDefault = true` (or `false`).
 
-## The future
-
-I'd like to add a GUI demo to make this more tangible, and to ease its
-integration into projects for which the demo would be directly re-usable.
-Details appear in [the to-do list](TODO.md).
-
 ## Contributing
 
 ```
