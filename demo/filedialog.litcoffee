@@ -363,7 +363,7 @@ Now proceed to examine all the files.
                 do ( file ) ->
                     action = ->
                         saveFileName.value = file
-                        updateFileBrowser()
+                        enableOrDisableSaveButton()
                     I = makeActionLink I, 'Save as ' + file, action
                     T = makeActionLink T, 'Save as ' + file, action
             X = ''
