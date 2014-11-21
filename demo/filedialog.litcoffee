@@ -361,7 +361,9 @@ Now proceed to examine all the files.
                     T = makeActionLink T, 'Open ' + file, action
             if features.fileNameTextBox
                 do ( file ) ->
-                    action = -> saveFileName.value = file
+                    action = ->
+                        saveFileName.value = file
+                        updateFileBrowser()
                     I = makeActionLink I, 'Save as ' + file, action
                     T = makeActionLink T, 'Save as ' + file, action
             X = ''
