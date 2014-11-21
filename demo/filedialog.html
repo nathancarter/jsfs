@@ -2,24 +2,6 @@
   <head>
     <script language='javascript' src='../release/jsfs.js'></script>
     <script language='javascript' src='filedialog.min.js'></script>
-    <script language='javascript'>
-      window.onmessage = function ( e ) {
-          if ( !( e.data instanceof Array ) ) {
-              console.log( 'Invalid message from page:', e.data );
-              return;
-          }
-          var fname = e.data.shift();
-          var args = e.data;
-          if ( typeof window[fname] != 'function' ) {
-              console.log( 'Cannot call non-function:', fname );
-              return;
-          }
-          window[fname].apply( null, args );
-      }
-      function tellPage ( message ) {
-          window.top.postMessage( message, '*' );
-      }
-    </script>
   </head>
   <body>
     <p>Dialog will go here.</p>

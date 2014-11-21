@@ -2,6 +2,34 @@
 This file is used by `filedialog.html` in the same folder, to provide a demo
 GUI for browsing a `jsfs` filesystem.
 
+# Communicating with the page
+
+This web page is used inside an `<iframe>` of another page, and thus it uses
+message-passing (`onmessage` an `postMessage` calls) to communicate with
+that outer page.
+
+We therefore create two functions to handle this task.  The first one
+listens for messages from the outer page and handles them by turning them
+into function calls.  This permits the outer page to call any
+(already-defined) function in the inner page.  The message's data should be
+an array mimicking the function signature.  E.g., to call `f(a,b,c)`, send
+the array `['f',a,b,c]` to this page using `postMessage`.
+
+    window.onmessage = ( e ) ->
+        if e.data not instanceof Array
+            return console.log 'Invalid message from page:', e.data
+        fname = e.data.shift()
+        if typeof window[fname] isnt 'function'
+            return console.log 'Cannot call non-function:', fname
+        window[fname].apply null, e.data
+
+The second function that handles message-passing with the page is for
+communication in the other direction.  To tell the page any data, simply
+pass it to the `tellPage` routine, and it will be posted to the containing
+window via `postMessage`.
+
+    tellPage = ( message ) -> window.top.postMessage message, '*'
+
 # State variables
 
 The following variables determine the state of this page.
