@@ -74,7 +74,9 @@ is written in a literate language, so it's documentation, too.
 
 You can turn on and off data compression with an optional third parameter to
 the `write` and `append` functions, or just set a default for all write
-operations with `F.compressionDefault = true` (or `false`).
+operations with `F.compressionDefault = true` (or `false`).  (Compression
+will only work if the webpage defines the global `LZString` object, as
+provided by [this project](https://github.com/pieroxy/lz-string/).)
 
 ## Contributing
 
