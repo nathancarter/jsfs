@@ -55,14 +55,14 @@ array requires using it, an error is thrown.
         _readFile : ( farray ) ->
             result = localStorage.getItem @_fileName farray[0]
             if farray[2]
-                if not LZString
+                if not LZString?
                     throw Error 'Cannot decompress file; LZString undefined'
                 result = LZString.decompress result
             JSON.parse result
         _writeFile : ( farray, content ) ->
             data = JSON.stringify content
             if farray[2]
-                if not LZString
+                if not LZString?
                     throw Error 'Cannot compress file; LZString undefined'
                 data = LZString.compress data
             localStorage.setItem @_fileName( farray[0] ), data

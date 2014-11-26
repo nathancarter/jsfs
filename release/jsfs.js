@@ -44,7 +44,7 @@
       var result;
       result = localStorage.getItem(this._fileName(farray[0]));
       if (farray[2]) {
-        if (!LZString) {
+        if (typeof LZString === "undefined" || LZString === null) {
           throw Error('Cannot decompress file; LZString undefined');
         }
         result = LZString.decompress(result);
@@ -56,7 +56,7 @@
       var data;
       data = JSON.stringify(content);
       if (farray[2]) {
-        if (!LZString) {
+        if (typeof LZString === "undefined" || LZString === null) {
           throw Error('Cannot compress file; LZString undefined');
         }
         data = LZString.compress(data);
