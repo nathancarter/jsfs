@@ -683,7 +683,6 @@ failure.
             fs = @_getFilesystemObject()
             sourcePath = @separate source
             file = @walkPathAndFile fs, sourcePath
-            console.log fs, file
             if not file or file not instanceof Array then return no
 
 Find the destination to which we should copy it.  This requires considering
