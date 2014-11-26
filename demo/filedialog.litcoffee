@@ -421,7 +421,7 @@ the content proper.
         if features.fileNameTextBox
             statusbar += "File name:
                           <input id='saveFileName' type='text' size=40
-                                 onkeyup='enableOrDisableSaveButton();'/>"
+                                 onkeyup='saveBoxKeyPressed(event);'/>"
         if features.extensionFilter
             extensions = ( "<option>#{e}</option>" \
                 for e in allExtensions() )
@@ -521,18 +521,21 @@ then use that as the save filename.
         document.body.innerHTML = titlebar + interior + statusbar
         if oldName and saveFileName? then saveFileName.value = oldName
         if oldIndex and fileFilter? then fileFilter.selectedIndex = oldIndex
-        enableOrDisableSaveButton()
+        saveBoxKeyPressed()
         if saveFileName? then saveFileName.focus()
 
 The above function depends on a handler to enable/disable the Save button
 based on whether the file name has been filled in.  The following function
-is that handler.
+is that handler.  It also simulates Save/Cancel button presses in response
+to Enter/Escape key presses, respectively.
 
-    window.enableOrDisableSaveButton = ->
+    window.saveBoxKeyPressed = ( event ) ->
         name = saveFileName?.value
         statusBarButtonSave?.disabled = !name
         if typeof name is 'string'
             tellPage [ 'saveFileNameChanged', name ]
+        if event?.keyCode is 13 then return buttonClicked 'Save'
+        if event?.keyCode is 27 then return buttonClicked 'Cancel'
 
 The following utility function makes a two-column table out of the string
 array given as input.  This is useful for populating the file dialog.
