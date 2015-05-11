@@ -48,15 +48,23 @@ they are, and tells the user how to install them if they are not.  This
 function is used in each of the build tasks, below.
 
     fs = require 'fs'
+    path = require 'path'
+    prefix = path.resolve __dirname, 'node_modules'
     ensureRequirementsInstalled = ->
         pj = JSON.parse fs.readFileSync 'package.json'
         missing = ( key for key of pj.dependencies when \
-            not fs.existsSync "./node_modules/#{key}" ).join ', '
+            not fs.existsSync path.resolve prefix, key ).join ', '
         if missing isnt ''
             console.log "This folder is not yet set up.
                 Missing node.js packages: #{missing}\n
                 To fix this, run: npm install"
             process.exit 1
+
+Now that those requirements have been verified to be present, we can use the
+two relevant commands, `coffee` and `uglify`.
+
+    coffee = path.resolve __dirname, 'node_modules', '.bin', 'coffee'
+    uglify = path.resolve __dirname, 'node_modules', '.bin', 'uglifyjs'
 
 ## Compile the one source file
 
@@ -80,15 +88,13 @@ the `release/` folder.
         runShellCommands [
             {
                 description : 'Compiling jsfs.litcoffee...'
-                command : './node_modules/.bin/coffee
-                           --map --compile jsfs.litcoffee'
+                command : "#{coffee} --map --compile jsfs.litcoffee"
             }
             {
                 description : 'Minifying jsfs.js...'
-                command : './node_modules/.bin/uglifyjs
-                           -c -m -v false --in-source-map jsfs.js.map
-                           -o jsfs.min.js --source-map
-                           jsfs.min.js.map'
+                command : "#{uglify} -c -m -v false
+                           --in-source-map jsfs.js.map -o jsfs.min.js
+                           --source-map jsfs.min.js.map"
             }
             {
                 description : 'Moving files to release/...'
@@ -111,16 +117,15 @@ task compiles the `.litcoffee` source for that demo app.
         runShellCommands [
             {
                 description : 'Compiling filedialog.licoffee in demo/...'
-                command : '../node_modules/.bin/coffee
-                           --map --compile filedialog.litcoffee'
+                command : "#{coffee} --map --compile filedialog.litcoffee"
                 cwd : 'demo'
             }
             {
                 description : 'Minifying filedialog.js...'
-                command : '../node_modules/.bin/uglifyjs
-                           -c -m -v false --in-source-map filedialog.js.map
-                           -o filedialog.min.js --source-map
-                           filedialog.min.js.map'
+                command : "#{uglify} -c -m -v false
+                           --in-source-map filedialog.js.map
+                           -o filedialog.min.js
+                           --source-map filedialog.min.js.map"
                 cwd : 'demo'
             }
         ], ->
@@ -148,8 +153,7 @@ CoffeeScript compiler on each.
                 runShellCommands [
                     {
                         description : "Compiling tests/#{file}..."
-                        command : "../node_modules/.bin/coffee
-                                   --compile #{file}"
+                        command : "#{coffee} --compile #{file}"
                         cwd : 'tests'
                     }
                 ], ->
