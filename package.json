@@ -13,5 +13,9 @@
   },
   "scripts" : {
     "test" : "./node_modules/.bin/phantomjs tests/phantom-runner.js tests/index.html"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/nathancarter/jsfs.git"
   }
 }
