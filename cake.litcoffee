@@ -92,7 +92,7 @@ the `release/` folder.
             }
             {
                 description : 'Minifying jsfs.js...'
-                command : "#{uglify} -c -m -v false
+                command : "#{uglify} -c -m -v false jsfs.js
                            --in-source-map jsfs.js.map -o jsfs.min.js
                            --source-map jsfs.min.js.map"
             }
@@ -122,7 +122,7 @@ task compiles the `.litcoffee` source for that demo app.
             }
             {
                 description : 'Minifying filedialog.js...'
-                command : "#{uglify} -c -m -v false
+                command : "#{uglify} -c -m -v false filedialog.js
                            --in-source-map filedialog.js.map
                            -o filedialog.min.js
                            --source-map filedialog.min.js.map"
