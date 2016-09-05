@@ -187,6 +187,7 @@ If this function is given an absolute path as its second argument,
 it returns it unchanged.
 
         _toAbsolutePath : ( cwdPath, relativePath ) ->
+            if not relativePath? then return cwdPath
             sep = FileSystem::pathSeparator
             if relativePath[...sep.length] is sep then return relativePath
             result = FileSystem::_joinPath \

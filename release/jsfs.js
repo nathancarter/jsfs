@@ -153,6 +153,9 @@
 
     _Class.prototype._toAbsolutePath = function(cwdPath, relativePath) {
       var result, sep;
+      if (relativePath == null) {
+        return cwdPath;
+      }
       sep = FileSystem.prototype.pathSeparator;
       if (relativePath.slice(0, sep.length) === sep) {
         return relativePath;
