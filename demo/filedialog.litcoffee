@@ -28,7 +28,7 @@ communication in the other direction.  To tell the page any data, simply
 pass it to the `tellPage` routine, and it will be posted to the containing
 window via `postMessage`.
 
-    tellPage = ( message ) -> window.top.postMessage message, '*'
+    tellPage = ( message ) -> window.parent.postMessage message, '*'
 
 # State variables
 
