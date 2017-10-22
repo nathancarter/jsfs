@@ -36,6 +36,12 @@ page the usual way.
 <script type="text/javascript" src="jsfs.min.js"></script>
 ```
 
+Alternately, you can use a CDN.
+
+```html
+<script src='https://cdn.jsdelivr.net/gh/nathancarter/jsfs@1/release/jsfs.min.js'></script>
+```
+
 Create a filesystem object with whatever name you like.  You can have
 multiple (completely separate) filesystems under different names, in
 case you have multiple apps on your site.  (LocalStorage is
